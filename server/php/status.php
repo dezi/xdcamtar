@@ -82,16 +82,17 @@ function get_upload_status_complete(&$status,$index)
 function get_upload_status(&$status)
 {
 	if (! isset($status[ "uploads" ])) $status[ "uploads" ] = array();
-
+	
+	//
+	// Process uploads directory.
+	//
+	
 	$dir = "../tmp/xdcam/uploads";
 	$dfd = opendir($dir);
 	
 	while (($file = readdir($dfd)) !== false)
 	{	
-		if ($file == ".") continue;
-		if ($file == "..") continue;
-		if ($file == ".DS_Store") continue;
-		
+		if (substr($file,0,1) == ".") continue;
 		if (! is_dir("$dir/$file")) continue;
 		
 		$index = -1;
@@ -104,14 +105,26 @@ function get_upload_status(&$status)
 			}
 		}
 		
-		$ducmd = "du -sk $dir/$file";
+		//
+		// For debugging check if $file is a link.
+		//
+		
+		if (readlink("$dir/$file"))
+		{
+			$ducmd = "du -sk $dir/" . readlink("$dir/$file");
+		}
+		else
+		{
+			$ducmd = "du -sk $dir/$file";
+		}
+		
 		$dures = exec($ducmd);
 
 		if ($index == count($status[ "uploads" ]))
 		{
 			$status[ "uploads" ][ $index ] = array(); 
-			$status[ "uploads" ][ $index ][ "dir" ] = $file;
-			$status[ "uploads" ][ $index ][ "status" ] = "unknown";		
+			$status[ "uploads" ][ $index ][ "dir"    ] = $file;
+			$status[ "uploads" ][ $index ][ "status" ] = "evaluating...";		
 			$status[ "uploads" ][ $index ][ "kbsize" ] = intval($dures);
 			$status[ "uploads" ][ $index ][ "kbtime" ] = time();
 		}
@@ -125,7 +138,7 @@ function get_upload_status(&$status)
 					
 					if ($complete)
 					{
-						$status[ "uploads" ][ $index ][ "status" ] = "complete";
+						$status[ "uploads" ][ $index ][ "status" ] = "uploaded";
 
 						$tardir  = "../tmp/xdcam/tarballs";
 						$tarball = "$tardir/$file.tar";
@@ -137,7 +150,7 @@ function get_upload_status(&$status)
 
 						if (file_exists($tarball . ".tmp"))
 						{
-							$status[ "uploads" ][ $index ][ "status" ] = "taring";
+							$status[ "uploads" ][ $index ][ "status" ] = "taring...";
 						}
 						
 						if (file_exists($tarball . ".bad"))
@@ -152,12 +165,12 @@ function get_upload_status(&$status)
 				}
 				else
 				{
-					$status[ "uploads" ][ $index ][ "status" ] = "stalled";
+					$status[ "uploads" ][ $index ][ "status" ] = "evaluating...";
 				}
 			}
 			else
 			{
-				$status[ "uploads" ][ $index ][ "status" ] = "uploading";
+				$status[ "uploads" ][ $index ][ "status" ] = "uploading...";
 				$status[ "uploads" ][ $index ][ "kbsize" ] = intval($dures);
 				$status[ "uploads" ][ $index ][ "kbtime" ] = time();
 			}		
@@ -165,13 +178,81 @@ function get_upload_status(&$status)
 	}
 	
 	closedir($dfd);
+
+	//
+	// Process tarballs directory.
+	//
+	
+	$dir = "../tmp/xdcam/tarballs";
+	$dfd = opendir($dir);
+	
+	while (($file = readdir($dfd)) !== false)
+	{	
+		if ($file == ".") continue;
+		if ($file == "..") continue;
+		if ($file == ".DS_Store") continue;
+		
+		if (substr($file,-4) != ".tar") continue;
+
+		$entry = substr($file,0,-4);
+		
+		$index = -1;
+		
+		for ($index = 0; $index < count($status[ "uploads" ]); $index++)
+		{
+			if ($status[ "uploads" ][ $index ][ "dir" ] == $entry)
+			{
+				break;
+			}
+		}
+		
+		$ducmd = "du -sk $dir/$file";
+		$dures = exec($ducmd);
+		
+		if ($index == count($status[ "uploads" ]))
+		{
+			$status[ "uploads" ][ $index ] = array(); 
+			$status[ "uploads" ][ $index ][ "dir"    ] = $entry;
+			$status[ "uploads" ][ $index ][ "kbsize" ] = intval($dures);
+			$status[ "uploads" ][ $index ][ "kbtime" ] = time();
+		}
+		
+		$status[ "uploads" ][ $index ][ "status" ] = "tared";		
+	}
+	
+	closedir($dfd);
 }
 
 function get_upload_tarball($status)
 {
+	//
+	// We might wait a long time for tar processes.
+	//
+	
+	set_time_limit(0);
+
+	//
+	// Check disk space.
+	//
+	
+	$bytes = disk_total_space("../tmp/xdcam/tarballs");
+	
+	if ($bytes <= (100.0 * 1000.0 * 1000.0 * 1000.0))
+	{
+		//
+		// Less than 100G free.
+		//
+		
+		return;
+	}
+	
+	//
+	// Scan status for tars to be done.
+	//
+	
 	for ($index = 0; $index < count($status[ "uploads" ]); $index++)
 	{
-		if ($status[ "uploads" ][ $index ][ "status" ] != "complete") continue;
+		if ($status[ "uploads" ][ $index ][ "status" ] != "uploaded") continue;
 
 		$file = $status[ "uploads" ][ $index ][ "dir" ];
 		
@@ -202,19 +283,33 @@ function get_upload_tarball($status)
 		
 		if (! flock($lockfd,LOCK_EX + LOCK_NB)) 
 		{
+			//
+			// A tar is already in progress.
+			//
+
 			fclose($lockfd);
 			
 			continue;
 		}
 		
 		//
-		// Do tarball processing.
+		// Do tarball processing. Prefer GNU tar on OSX.
 		//
 		
+		$tarbin = "/usr/local/bin/tar";
+		if (! file_exists($tarbin)) $tarbin = "tar";
+
+		//
+		// Exclude hidden files and derefence symlinks for debug.
+		//
+		
+		$taropt = "--exclude=.* --dereference";
+	
 		$tartar = "../tarballs/$file.tar";
 		
 		$tarcmd = "cd $srcdir;"
-			    . "tar cvf $tartar.tmp $file 2> $tartar.log || mv $tartar.tmp $tartar.bad;"
+			    . "$tarbin cvf $tartar.tmp $taropt $file > $tartar.log"
+			    . " || mv $tartar.tmp $tartar.bad;"
 			    . "mv $tartar.tmp $tartar";
 			    
 		$tarres = exec($tarcmd);
@@ -223,15 +318,24 @@ function get_upload_tarball($status)
 		// If success delete original copy.
 		//
 		
-		// todo
+		$delcmd = "cd $srcdir;rm -rf $file";
+		$delres = exec($delcmd);
 		
 		flock($lockfd,LOCK_UN);
 		fclose($lockfd);
 	}
 }
 
+//
+// Start clean output buffer.
+//
+
 ob_end_clean();
 ob_start();
+
+//
+// Read status from shared memory segment.
+//
 
 $shmid   = shmop_open(123456,"c",0644,64 * 1024);
 $shmsize = shmop_size($shmid);
@@ -240,24 +344,43 @@ $status = json_decdat(shmop_read($shmid,0,$shmsize));
 
 if ($status === null) $status = array();
 
+//
+// Update all statuses.
+//
+
 get_upload_status($status);
+
+//
+// Write back updated status to shared memory.
+//
 
 shmop_write($shmid,str_pad(json_encdat($status),$shmsize),0);
 shmop_close($shmid);
+
+//
+// Prepare response for client.
+//
 
 echo "Kappa.StatusEvent(\n";
 echo json_encdat($status) . "\n";
 echo ");\n";
 
+//
+// Finalize output and flush.
+//
+
 $size = ob_get_length();
 
-header("Content-Length: $size");
 header("Content-type: text/plain; charset=utf-8");
+header("Content-Length: $size");
 header("Connection: close");
 
 ob_end_flush();
 flush();
 
+//
+// Do detached processing if required.
+//
+
 get_upload_tarball($status);
 ?>
-

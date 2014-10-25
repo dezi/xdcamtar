@@ -1,13 +1,17 @@
 <!doctype html>
 <html>
 <head>
-<title>XDCAM-TAR-Status</title>
+<title>XDCAM-Processing-Status</title>
 <script>
 
 Kappa = new Object();
 
 Kappa.StatusEvent = function(status)
 {	
+	var stampspan = document.getElementById("stamp");
+	var now = new Date();
+	stampspan.innerHTML = now.toLocaleString();
+	
 	var uploadsdiv = document.getElementById("uploads");
 	
 	uploadsdiv.innerHTML = "";
@@ -48,22 +52,27 @@ Kappa.StatusEvent = function(status)
 	window.setTimeout('Kappa.StatusCaller()',1000);
 }
 
+Kappa.StatusScript = null;
+
 Kappa.StatusCaller = function()
 {
-    var script = document.createElement('script');
-    script.src = '/status?rnd=' + Math.random();
-    document.body.appendChild(script);
+	if (Kappa.StatusScript)
+	{
+		document.body.removeChild(Kappa.StatusScript);
+		Kappa.StatusScript = null;
+	}
+	
+	Kappa.StatusScript = document.createElement('script');
+    Kappa.StatusScript.src = '/status?rnd=' + Math.random();
+    document.body.appendChild(Kappa.StatusScript);
 }
 
 </script>
 </head>
 <body>
-<h3><center>XDCAM-TAR-Status</center></h3>
+<h3><center>XDCAM-Processing-Status</center></h3>
+<h4><center id="stamp"></center></h4>
 <div id="uploads"></div>
-
-<script>
-Kappa.StatusCaller();
-</script>
 <?php
 	include("../php/json.php");
 
@@ -74,8 +83,11 @@ Kappa.StatusCaller();
 	
 	//var_dump($shm_status);
 	
-	//shmop_delete($shmid);
+	shmop_delete($shmid);
 	shmop_close($shmid);
 ?>
+<script>
+Kappa.StatusCaller();
+</script>
 </body>
 
