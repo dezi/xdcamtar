@@ -1,6 +1,6 @@
 <?php
 
-header("Content-type: text/plain; charset=utf-8");
+include("./json.php");
 
 function get_tar_content($tarpath,$tarcont = null)
 {
@@ -120,6 +120,8 @@ function get_tar_content($tarpath,$tarcont = null)
 	return $directory;
 }
 
+header("Content-type: text/plain; charset=utf-8");
+
 $tarball = $_SERVER[ "SCRIPT_NAME" ];
 if (substr($tarball,0,7) != "/tarman") exit();
 
@@ -128,15 +130,22 @@ $tartpos = strpos($tarball,".tar/");
 
 if ($tartpos === false)
 {
+
 	$directory = get_tar_content($tarball);
+	
+	//
+	// Prepare response for client.
+	//
+
+	echo "Kappa.TarmanEvent(\n";
+	echo json_encdat($directory) . "\n";
+	echo ");\n";
 }
 else
 {
 	$tarcont = substr($tarball,$tartpos + 5);
 	$tarball = substr($tarball,0,$tartpos + 4);
 
-	//echo "$tarball => $tarcont\n";
-	
 	get_tar_content($tarball,$tarcont);
 }
 

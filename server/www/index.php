@@ -23,12 +23,12 @@ Kappa.StatusEvent = function(status)
 		var uploaddiv = document.createElement('div');
 		uploaddiv.style.padding = "8px";
 		
-		var dirdiv = document.createElement('span');
+		var entrydiv = document.createElement('span');
 		
-		dirdiv.style.width = "30%";
-		dirdiv.style.display = "inline-block";
-		dirdiv.style.padding = "4px";
-		dirdiv.innerHTML = upload.dir;
+		entrydiv.style.width = "30%";
+		entrydiv.style.display = "inline-block";
+		entrydiv.style.padding = "4px";
+		entrydiv.innerHTML = upload.entry;
 		
 		var kbsizediv = document.createElement('span');
 		kbsizediv.style.width = "30%";
@@ -42,7 +42,7 @@ Kappa.StatusEvent = function(status)
 		statusdiv.style.padding = "4px";
 		statusdiv.innerHTML = upload.status;
 		
-		uploaddiv.appendChild(dirdiv);
+		uploaddiv.appendChild(entrydiv);
 		uploaddiv.appendChild(kbsizediv);
 		uploaddiv.appendChild(statusdiv);
 		
@@ -70,8 +70,8 @@ Kappa.StatusCaller = function()
 </script>
 </head>
 <body>
-<h3><center>XDCAM-Processing-Status</center></h3>
 <h4><center id="stamp"></center></h4>
+<h3><center>XDCAM-Processing-Status</center></h3>
 <div id="uploads"></div>
 <?php
 	include("../php/json.php");

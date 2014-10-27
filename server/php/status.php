@@ -2,25 +2,27 @@
 
 include("./json.php");
 
-function get_upload_status_complete(&$status,$index)
+function xdcam_uploads_get_status_complete(&$status,$index)
 {
+	$mystatus = &$status[ "uploads" ];
+	
 	//
 	// Check if already done.
 	//
 	
-	if (isset($status[ "uploads" ][ $index ][ "files" ]))
+	if (isset($mystatus[ $index ][ "files" ]))
 	{
 		return true;
 	}
 	
 	$dir  = "../tmp/xdcam/uploads";
-	$file = $status[ "uploads" ][ $index ][ "dir" ];
+	$entry = $mystatus[ $index ][ "entry" ];
 	
 	//
 	// Check for index XML.
 	//
 	
-	$indexxmlpath = "$dir/$file/XDCAM/PROAV/INDEX.XML";
+	$indexxmlpath = "$dir/$entry/XDCAM/PROAV/INDEX.XML";
 	
 	if (! file_exists($indexxmlpath)) return false;
 	
@@ -32,7 +34,7 @@ function get_upload_status_complete(&$status,$index)
 	// Get clip content path.
 	//
 	
-	$clippath = "$dir/$file/XDCAM" . $indexobj[ "clipTable" ][ "@attributes" ][ "path" ];
+	$clippath = "$dir/$entry/XDCAM" . $indexobj[ "clipTable" ][ "@attributes" ][ "path" ];
 
 	$clipfiles = array();
 	
@@ -73,16 +75,18 @@ function get_upload_status_complete(&$status,$index)
 			$clipfiles[] = $subclipfile;
 		}
 	}
-			
-	$status[ "uploads" ][ $index ][ "files" ] = $clipfiles;
-	
+
+	$mystatus[ $index ][ "files" ] = $clipfiles;
+
 	return true;
 }
 
-function get_upload_status(&$status)
+function xdcam_uploads_get_status(&$status)
 {
 	if (! isset($status[ "uploads" ])) $status[ "uploads" ] = array();
 	
+	$mystatus = &$status[ "uploads" ];
+
 	//
 	// Process uploads directory.
 	//
@@ -90,95 +94,103 @@ function get_upload_status(&$status)
 	$dir = "../tmp/xdcam/uploads";
 	$dfd = opendir($dir);
 	
-	while (($file = readdir($dfd)) !== false)
+	while (($entry = readdir($dfd)) !== false)
 	{	
-		if (substr($file,0,1) == ".") continue;
-		if (! is_dir("$dir/$file")) continue;
+		if (substr($entry,0,1) == ".") continue;
+		
+		if (! is_dir("$dir/$entry")) continue;
 		
 		$index = -1;
 		
-		for ($index = 0; $index < count($status[ "uploads" ]); $index++)
+		for ($index = 0; $index < count($mystatus); $index++)
 		{
-			if ($status[ "uploads" ][ $index ][ "dir" ] == $file)
+			if ($mystatus[ $index ][ "entry" ] == $entry)
 			{
 				break;
 			}
 		}
 		
 		//
-		// For debugging check if $file is a link.
+		// For debugging check if $entry is a link.
 		//
 		
-		if (readlink("$dir/$file"))
+		if (readlink("$dir/$entry"))
 		{
-			$ducmd = "du -sk $dir/" . readlink("$dir/$file");
+			$ducmd = "du -sk $dir/" . readlink("$dir/$entry");
 		}
 		else
 		{
-			$ducmd = "du -sk $dir/$file";
+			$ducmd = "du -sk $dir/$entry";
 		}
 		
 		$dures = exec($ducmd);
 
-		if ($index == count($status[ "uploads" ]))
+		if ($index == count($mystatus))
 		{
-			$status[ "uploads" ][ $index ] = array(); 
-			$status[ "uploads" ][ $index ][ "dir"    ] = $file;
-			$status[ "uploads" ][ $index ][ "status" ] = "evaluating...";		
-			$status[ "uploads" ][ $index ][ "kbsize" ] = intval($dures);
-			$status[ "uploads" ][ $index ][ "kbtime" ] = time();
+			$mystatus[ $index ] = array(); 
+			$mystatus[ $index ][ "entry"  ] = $entry;
+			$mystatus[ $index ][ "status" ] = "evaluating...";		
+			$mystatus[ $index ][ "kbsize" ] = intval($dures);
+			$mystatus[ $index ][ "kbtime" ] = time();
 		}
 		else
 		{
-			if ($status[ "uploads" ][ $index ][ "kbsize" ] == intval($dures))
+			if ($mystatus[ $index ][ "kbsize" ] == intval($dures))
 			{
-				if ((time() - $status[ "uploads" ][ $index ][ "kbtime" ]) > 10)
+				if ((time() - $mystatus[ $index ][ "kbtime" ]) > 10)
 				{
-					$complete = get_upload_status_complete($status,$index);
+					$complete = xdcam_uploads_get_status_complete($status,$index);
 					
 					if ($complete)
 					{
-						$status[ "uploads" ][ $index ][ "status" ] = "uploaded";
+						$mystatus[ $index ][ "status" ] = "uploaded";
 
 						$tardir  = "../tmp/xdcam/tarballs";
-						$tarball = "$tardir/$file.tar";
+						$tarball = "$tardir/$entry.tar";
 						
 						if (file_exists($tarball))
 						{
-							$status[ "uploads" ][ $index ][ "status" ] = "tared";
+							$mystatus[ $index ][ "status" ] = "tared";
 						}
 
 						if (file_exists($tarball . ".tmp"))
 						{
-							$status[ "uploads" ][ $index ][ "status" ] = "taring...";
+							$mystatus[ $index ][ "status" ] = "taring...";
 						}
 						
 						if (file_exists($tarball . ".bad"))
 						{
-							$status[ "uploads" ][ $index ][ "status" ] = "failed";
+							$mystatus[ $index ][ "status" ] = "failed";
 						}
 					}
 					else
 					{
-						$status[ "uploads" ][ $index ][ "status" ] = "incomplete";
+						$mystatus[ $index ][ "status" ] = "incomplete";
 					}
 				}
 				else
 				{
-					$status[ "uploads" ][ $index ][ "status" ] = "evaluating...";
+					$mystatus[ $index ][ "status" ] = "evaluating...";
 				}
 			}
 			else
 			{
-				$status[ "uploads" ][ $index ][ "status" ] = "uploading...";
-				$status[ "uploads" ][ $index ][ "kbsize" ] = intval($dures);
-				$status[ "uploads" ][ $index ][ "kbtime" ] = time();
+				$mystatus[ $index ][ "status" ] = "uploading...";
+				$mystatus[ $index ][ "kbsize" ] = intval($dures);
+				$mystatus[ $index ][ "kbtime" ] = time();
 			}		
 		}
 	}
 	
 	closedir($dfd);
+}
 
+function xdcam_tarballs_get_status(&$status)
+{
+	if (! isset($status[ "uploads" ])) $status[ "uploads" ] = array();
+	
+	$mystatus = &$status[ "uploads" ];
+	
 	//
 	// Process tarballs directory.
 	//
@@ -186,44 +198,42 @@ function get_upload_status(&$status)
 	$dir = "../tmp/xdcam/tarballs";
 	$dfd = opendir($dir);
 	
-	while (($file = readdir($dfd)) !== false)
+	while (($entry = readdir($dfd)) !== false)
 	{	
-		if ($file == ".") continue;
-		if ($file == "..") continue;
-		if ($file == ".DS_Store") continue;
+		if (substr($entry,0,1) == ".") continue;		
 		
-		if (substr($file,-4) != ".tar") continue;
+		if (substr($entry,-4) != ".tar") continue;
 
-		$entry = substr($file,0,-4);
+		$entryname = substr($entry,0,-4);
 		
 		$index = -1;
 		
-		for ($index = 0; $index < count($status[ "uploads" ]); $index++)
+		for ($index = 0; $index < count($mystatus); $index++)
 		{
-			if ($status[ "uploads" ][ $index ][ "dir" ] == $entry)
+			if ($mystatus[ $index ][ "entry" ] == $entryname)
 			{
 				break;
 			}
 		}
 		
-		$ducmd = "du -sk $dir/$file";
+		$ducmd = "du -sk $dir/$entry";
 		$dures = exec($ducmd);
 		
-		if ($index == count($status[ "uploads" ]))
+		if ($index == count($mystatus))
 		{
-			$status[ "uploads" ][ $index ] = array(); 
-			$status[ "uploads" ][ $index ][ "dir"    ] = $entry;
-			$status[ "uploads" ][ $index ][ "kbsize" ] = intval($dures);
-			$status[ "uploads" ][ $index ][ "kbtime" ] = time();
+			$mystatus[ $index ] = array(); 
+			$mystatus[ $index ][ "entry"  ] = $entryname;
+			$mystatus[ $index ][ "kbsize" ] = intval($dures);
+			$mystatus[ $index ][ "kbtime" ] = time();
 		}
 		
-		$status[ "uploads" ][ $index ][ "status" ] = "tared";		
+		$mystatus[ $index ][ "status" ] = "tared";		
 	}
 	
 	closedir($dfd);
 }
 
-function get_upload_tarball($status)
+function xdcam_uploads_make_tarball($status)
 {
 	//
 	// We might wait a long time for tar processes.
@@ -254,14 +264,14 @@ function get_upload_tarball($status)
 	{
 		if ($status[ "uploads" ][ $index ][ "status" ] != "uploaded") continue;
 
-		$file = $status[ "uploads" ][ $index ][ "dir" ];
+		$entry = $status[ "uploads" ][ $index ][ "entry" ];
 		
 		//
 		// Check for tar already present.
 		//
 		
 		$tardir  = "../tmp/xdcam/tarballs";
-		$tarball = "$tardir/$file.tar";
+		$tarball = "$tardir/$entry.tar";
 		
 		if (file_exists($tarball)) continue;
 		
@@ -277,7 +287,7 @@ function get_upload_tarball($status)
 		//
 		
 		$srcdir  = "../tmp/xdcam/uploads";
-		$srctree = "$srcdir/$file";
+		$srctree = "$srcdir/$entry";
 
 		$lockfd = fopen($srcdir,"r");
 		
@@ -297,6 +307,8 @@ function get_upload_tarball($status)
 		//
 		
 		$tarbin = "/usr/local/bin/tar";
+		
+		if (! file_exists($tarbin)) $tarbin = "/usr/bin/gnutar";
 		if (! file_exists($tarbin)) $tarbin = "tar";
 
 		//
@@ -305,10 +317,10 @@ function get_upload_tarball($status)
 		
 		$taropt = "--exclude=.* --dereference";
 	
-		$tartar = "../tarballs/$file.tar";
+		$tartar = "../tarballs/$entry.tar";
 		
 		$tarcmd = "cd $srcdir;"
-			    . "$tarbin cvf $tartar.tmp $taropt $file > $tartar.log"
+			    . "$tarbin cvf $tartar.tmp $taropt $entry > $tartar.log"
 			    . " || mv $tartar.tmp $tartar.bad;"
 			    . "mv $tartar.tmp $tartar";
 			    
@@ -318,8 +330,11 @@ function get_upload_tarball($status)
 		// If success delete original copy.
 		//
 		
-		$delcmd = "cd $srcdir;rm -rf $file";
-		$delres = exec($delcmd);
+		if (file_exists("$srcdir/$tartar"))
+		{
+			$delcmd = "cd $srcdir;rm -rf $entry";
+			$delres = exec($delcmd);
+		}
 		
 		flock($lockfd,LOCK_UN);
 		fclose($lockfd);
@@ -348,7 +363,8 @@ if ($status === null) $status = array();
 // Update all statuses.
 //
 
-get_upload_status($status);
+xdcam_uploads_get_status ($status);
+xdcam_tarballs_get_status($status);
 
 //
 // Write back updated status to shared memory.
@@ -358,7 +374,7 @@ shmop_write($shmid,str_pad(json_encdat($status),$shmsize),0);
 shmop_close($shmid);
 
 //
-// Prepare response for client.
+// Prepare response for browser.
 //
 
 echo "Kappa.StatusEvent(\n";
@@ -382,5 +398,5 @@ flush();
 // Do detached processing if required.
 //
 
-get_upload_tarball($status);
+xdcam_uploads_make_tarball($status);
 ?>
