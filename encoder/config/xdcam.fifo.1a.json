@@ -1,0 +1,36 @@
+{
+	//
+	// FFmpeg decompression task
+	//
+	
+	type 	: "Unpack-A",
+	enabled : true,
+	
+	tasks :
+	[
+		{
+			//
+			// First unpack pass.
+			//
+			
+			phase : "audio-1",
+			exec  : "exec.ffmpeg",
+			
+			params :
+			[
+				"pass", 	"-y",
+				
+				//"mxfac1",	"-i /Users/dezi/xdcamtar/server/tmp/xdcam/original/magazin/XDCAM/PROAV/CLPR/C0005/C0005A01.MXF",
+				//"mxfac2",	"-i /Users/dezi/xdcamtar/server/tmp/xdcam/original/magazin/XDCAM/PROAV/CLPR/C0005/C0005A02.MXF",
+			
+				"mxfac1",	"-i %%xdcam-mxf-a01%%",
+				"mxfac2",	"-i %%xdcam-mxf-a02%%",
+
+				"merge",	"-filter_complex amerge=inputs=2",
+				
+				"audio",	"-f s16le -ac 2 -ar 48000",
+				"pipe",		"Kappa.out.1.1.pcm.s16le"
+			]
+		}
+	]
+}

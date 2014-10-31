@@ -1,0 +1,64 @@
+{
+	//
+	// Miscfiles are loaded into the temp directory for this profile.
+	// The profile temp directory is unique for each Kappa.UX process and
+	// created in the global configured temp directory with a guid name.
+	//
+	// The files are loaded from the same path as this profile. You
+	// can also specify absolute locations via smb, http and ftp or
+	// the local file system.
+	//
+	
+	miscfiles :
+	[
+		"bin/dejavusans.ttf"
+ 	],
+
+	//
+	// Logo configuration. Mode can either be source, final or 
+	// both (source+final).
+	//
+	// Source logos are applied before scaling, final logos are
+	// applied after scaling to final output dimensions.
+	//
+	// If a source and a final logo is available for encoding,
+	// the final logo is preferred.
+	//
+	
+	logos :
+	[
+	],
+
+	fifologo : "",
+
+	fifoman :
+	{
+		//
+		// Types to be done when in 4:3 mode.
+		//
+
+		"4:3" :
+		{
+			Type0   : { file:xdcam.fifo.0.json,   enabled:true,  slot:0,  definitions:[ "SD", "HD" ] },
+			Type1a  : { file:xdcam.fifo.1a.json,  enabled:true,  slot:1,  definitions:[ "SD", "HD" ] },
+			Type1v  : { file:xdcam.fifo.1v.json,  enabled:true,  slot:2,  definitions:[ "SD", "HD" ] },
+            Type11  : { file:xdcam.fifo.11.json,  enabled:true,  slot:3,  definitions:[ "SD", "HD" ] },
+			Type25x : { file:xdcam.fifo.25x.json, enabled:true,  slot:4,  definitions:[       "HD" ] },
+			Type25f : { file:xdcam.fifo.25f.json, enabled:true,  slot:5,  definitions:[       "HD" ] },
+		},
+		
+		//
+		// Types to be done when in 16:9 mode.
+		//
+		
+		"16:9" :
+		{			
+			Type0   : { file:xdcam.fifo.0.json,   enabled:true,  slot:0,  definitions:[ "SD", "HD" ] },
+			Type1a  : { file:xdcam.fifo.1a.json,  enabled:true,  slot:1,  definitions:[ "SD", "HD" ] },
+			Type1v  : { file:xdcam.fifo.1v.json,  enabled:true,  slot:2,  definitions:[ "SD", "HD" ] },
+            Type11  : { file:xdcam.fifo.11.json,  enabled:true,  slot:3,  definitions:[ "SD", "HD" ] },
+			Type25x : { file:xdcam.fifo.25x.json, enabled:true,  slot:4,  definitions:[       "HD" ] },
+			Type25f : { file:xdcam.fifo.25f.json, enabled:true,  slot:5,  definitions:[       "HD" ] },
+		}
+	}
+}

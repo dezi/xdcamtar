@@ -1,0 +1,34 @@
+{
+	//
+	// Fifoman pipe manager with stills and scenes,
+	// Kappa.UX parses output files from log.
+	//
+	
+	type 	: "Image",
+	enabled : true,
+
+	tasks :
+	[
+		{
+			//
+			// Pass 1.
+			//
+			
+			phase : "pass-1",
+			exec  : "exec.fifoman",
+			
+			params :
+			[				
+				"pass", 	"--pass 1",
+				
+				"workdir", 	"--pipedir ..",
+				
+				"images",	"--images 0x720:0x576:0x480:0x360:0x315:0x135:106x60:80x60",
+				
+				"scene",	"--scene 40:10:1000:0x360:0x120",
+								
+				"output",	"--prefix ../%%outputprefix%%"
+			]
+		}
+	]
+}

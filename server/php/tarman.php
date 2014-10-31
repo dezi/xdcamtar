@@ -27,7 +27,7 @@ function get_tar_content($tarpath,$tarcont = null)
 		// Figure out entry size.
 		//
 		
-		$size = substr($header,124,11);
+		$size = substr($header,124,12);
 		
 		if (ord($size[ 0 ]) >= 128)
 		{
@@ -83,6 +83,8 @@ function get_tar_content($tarpath,$tarcont = null)
 			// Pass through file entry.
 			//
 			
+			error_log("tarman size: $size\n");
+			
 			$todo = $size;
 			
 			while ($todo > 0)
@@ -97,6 +99,10 @@ function get_tar_content($tarpath,$tarcont = null)
 				
 				$todo -= strlen($content);
 			}
+			
+			error_log("tarman done\n");
+
+			break;
 		}
 		
 		//
@@ -143,6 +149,8 @@ if ($tartpos === false)
 }
 else
 {
+	set_time_limit(0);
+
 	$tarcont = substr($tarball,$tartpos + 5);
 	$tarball = substr($tarball,0,$tartpos + 4);
 

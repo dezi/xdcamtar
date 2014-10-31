@@ -1,0 +1,32 @@
+{
+	//
+	// FFmpeg decompression task
+	//
+	
+	type 	: "Unpack-V",
+	enabled : true,
+	
+	tasks :
+	[
+		{
+			//
+			// First unpack pass.
+			//
+			
+			phase : "video-1",
+			exec  : "exec.ffmpeg",
+			
+			params :
+			[
+				"pass", 	"-y",
+				
+				"input",	"-i %%inputvideo%%",
+				
+				"deinter",	"-vf %%deinterlace%%",
+
+				"video", 	"-f yuv4mpegpipe -r 25 -pix_fmt yuv420p",
+				"pipe",		"Kappa.out.1.1.yuv.y4m",
+			]
+		}
+	]
+}

@@ -1,0 +1,53 @@
+{	
+	//
+	// These options are the defaults and can be overriden
+	// by options given in the command line.
+	//
+
+	options:
+	[
+		"--arch",        "auto",
+		"--cores",    	 "auto",
+		"--definition",  "auto",
+		"--nvidia",    	 "auto",
+		"--usehttp",	 "true",
+		"--deinterlace", "yes",
+		"--aspectratio", "16:9",
+		
+		"--profile", 	 "profile.XDCAM-Preview.json",
+		
+		"--inputvideo",  "/Users/dezi/raspi/fifoman/Test-SD.mp4",
+		"--inputvideo",  "/Users/dezi/xdcamtar/server/tmp/xdcam/original/magazin/XDCAM/PROAV/CLPR/C0005/C0005V01.MXF",
+		"--inputvideo",  "http://dezimac.local/tarman/xdcam/tarballs/77345.tar/77345/XDCAM/PROAV/CLPR/C0005/C0005V01.MXF",
+
+		"--useguids",    "false",
+		"--outputdir",   "./output",
+		"--temp",        "./tmp",
+		
+		"--logprocess",  "true",
+		"--logprogres",  "true",
+		"--keeponerror", "true"
+	],
+	
+	//
+	// Executables are loaded into the temp directory for this config.
+	// The config temp directory is unique for each Kappa.UX process and
+	// created in the global configured temp directory with a guid name.
+	//
+	// The files are loaded from the same path as this config. You
+	// can also specify absolute locations via smb, http and ftp or
+	// the local file system.
+	//
+	
+	executables:
+	[
+		"bin/exec.x264.%%arch%%.static.20140303",
+		"bin/exec.ffmpeg.%%arch%%.static.20140303",
+		"bin/exec.ffprobe.%%arch%%.static.20140303",
+		"bin/exec.fifoman.%%arch%%.static.20140303",
+		"bin/exec.MP4Box.%%arch%%.static.20140303",
+		"bin/exec.writeavidmxf.%%arch%%.static.20140303",
+		"bin/exec.nv264.%%arch%%.static.20140303",
+		"bin/exec.vpxenc.%%arch%%.static.20140303"
+	]
+}

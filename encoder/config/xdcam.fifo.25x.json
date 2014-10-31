@@ -1,0 +1,42 @@
+{
+	//
+	// X264 HD 720p compression task
+	//
+	
+	type 	: "Encode25",
+	width	: "*",
+	height	: "720",
+	videobr : "1472 --vbv-maxrate 2994 --vbv-bufsize 1472",
+	cudadev : "--cudadevice 0",
+	enabled : true,
+	
+	tasks :
+	[
+		{
+			//
+			// H.264 Onepass.
+			//
+			
+			phase : "onepass",
+			exec  : "exec.%%x264%%",
+			
+			params :
+			[								
+				"bitrate",	"--bitrate %%videobr%% %%cudadev%%",
+				"aspect",	"--sar 1:1",
+
+				"profile", 	"--profile baseline",
+				"preset",   "--preset medium",
+				"tune",  	"--tune grain",
+				
+				"muxing",	"--demuxer y4m --muxer raw",
+
+				"output",	"-o",
+				"pipe",		"Kappa.out.1.25.t25.raw",
+				
+				"input",	"",
+				"pipe",		"Kappa.inp.1.25.yuv.size~%%width%%x%%height%%%%fifologo%%.y4m"
+			]
+		}
+	]
+}
