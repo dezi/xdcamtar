@@ -8,21 +8,22 @@
 	[
 		"--arch",        "auto",
 		"--cores",    	 "auto",
-		"--definition",  "auto",
 		"--nvidia",    	 "auto",
+		"--definition",  "auto",
 		"--usehttp",	 "true",
+		"--useguids",    "false",
 		"--deinterlace", "yes",
 		"--aspectratio", "16:9",
-		
+		"--temp",        "./tmp",
+
 		"--profile", 	 "profile.XDCAM-Preview.json",
 		
 		"--inputvideo",  "/Users/dezi/raspi/fifoman/Test-SD.mp4",
 		"--inputvideo",  "/Users/dezi/xdcamtar/server/tmp/xdcam/original/magazin/XDCAM/PROAV/CLPR/C0005/C0005V01.MXF",
+		"--inputvideo",  "http://dezimac.local/tarman/xdcam/tarballs/77345.tar/77345/XDCAM/PROAV/CLPR/C0004/C0004V01.MXF",
 		"--inputvideo",  "http://dezimac.local/tarman/xdcam/tarballs/77345.tar/77345/XDCAM/PROAV/CLPR/C0005/C0005V01.MXF",
 
-		"--useguids",    "false",
-		"--outputdir",   "./output",
-		"--temp",        "./tmp",
+		"--outputdir",   "http://dezimac.local/output/xdcam/previews/77345/XDCAM/PROAV/CLPR/C0005",
 		
 		"--logprocess",  "true",
 		"--logprogres",  "true",

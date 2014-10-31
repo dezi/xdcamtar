@@ -1,5 +1,4 @@
 .DS_STORE
+server/out
 server/tmp
 encoder/tmp
-server/output
-encoder/output
