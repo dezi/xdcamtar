@@ -81,10 +81,10 @@ function MainLoop($selfname)
 	
     if (function_exists("pcntl_signal"))
     {
-        pcntl_signal(SIGTERM,"Shutdown");
         pcntl_signal(SIGHUP, "Shutdown");
+        pcntl_signal(SIGINT ,"Shutdown");
         pcntl_signal(SIGUSR1,"Shutdown");
-        pcntl_signal(SIGKILL,"Shutdown");
+        pcntl_signal(SIGTERM,"Shutdown");
     }
     else
     {
@@ -102,11 +102,11 @@ function MainLoop($selfname)
 	
 	while (! $GLOBALS[ "shutdown" ])
 	{			
-		sleep(3);
-
 		Logdat("Alive...\n");
 		
 		Logflush();
+		
+		sleep(3);
 	}
 	
 	Logdat("Exitting.\n");

@@ -1,10 +1,9 @@
 #!/bin/sh
 
-XDCUSER=%%USER%%
-XDCPROCS=%%PROC%%
-XDCWORKDIR=%%HOME%%/xdcamtar/encoder
-XDCWORKPUB=$XDCWORKDIR/pub
-XDCTASKCLIENT=encoder.php
+XDCUSER=odroid
+XDCWORKDIR=/home/odroid/xdcamtar/encoder
+XDCWORKPHP=$XDCWORKDIR/php
+XDCENCODER=encoder.php
 PHPBIN=`which php`
 
 ### BEGIN INIT INFO
@@ -21,13 +20,13 @@ RUN_MODE="daemons"
 
 LOGDIR=$XDCWORKDIR/log
 PIDDIR=$XDCWORKDIR/run
-TCLDPID=$PIDDIR/$XDCTASKCLIENT.pid
+TCLDPID=$PIDDIR/$XDCENCODER.pid
 
 # clear conflicting settings from the environment
 unset TMPDIR
 
 # See if the daemons are there
-test -f $XDCWORKPUB/$XDCTASKCLIENT  || exit 0
+test -f $XDCWORKPHP/$XDCENCODER || exit 0
 
 . /lib/lsb/init-functions
 
@@ -38,9 +37,9 @@ case "$1" in
 		install -o $XDCUSER -m 755 -d $LOGDIR
 		install -o $XDCUSER -m 755 -d $PIDDIR
 
-		log_progress_msg "$XDCTASKCLIENT"
+		log_progress_msg "$XDCENCODER"
 		
-		if ! start-stop-daemon --start -b -c $XDCUSER -d $XDCWORKPUB -p $TCLDPID -x $PHPBIN -- $XDCTASKCLIENT $XDCPROCS; then
+		if ! start-stop-daemon --start -b -c $XDCUSER -d $XDCWORKPHP -p $TCLDPID -x $PHPBIN -- $XDCENCODER; then
 			log_end_msg 1
 			exit 1
 		fi
@@ -50,7 +49,7 @@ case "$1" in
 	stop)
 		log_daemon_msg "Stopping XDCAM-Encoder daemon"
 
-		log_progress_msg "$XDCTASKCLIENT"
+		log_progress_msg "$XDCENCODER"
 		
 		start-stop-daemon --stop --quiet --pidfile $TCLDPID
 		
