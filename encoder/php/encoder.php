@@ -56,7 +56,62 @@ function Logdat($message)
 	fputs($GLOBALS[ "logfd" ],$message);
 }
 
+//
+// Get encoding job from server.
+//
 
+function Getjob()
+{
+	$host = $GLOBALS[ "server_host" ];
+	$port = $GLOBALS[ "server_port" ];
+	
+	$self = $GLOBALS[ "hostname" ];
+	$unam = $GLOBALS[ "uname"    ];
+	
+	$fp = @fsockopen($host,$port,$errno,$errstr,30);
+	
+	if (!$fp) 
+	{
+    	Logdat("Failed server connect $host:$port\n");
+    	
+    	return;
+	}
+	
+	fwrite($fp,"GET /getjob HTTP/1.1\r\n");
+    fwrite($fp,"Host: $host\r\n");
+    fwrite($fp,"XDC-Host: $self\r\n");
+    fwrite($fp,"XDC-Unam: $unam\r\n");
+    fwrite($fp,"Transfer-Encoding: chunked\r\n");
+    fwrite($fp,"\r\n");
+    fflush($fp);
+    
+    while (true) 
+    {
+    	if (feof($fp)) break;
+    	
+    	$line = fgets($fp,128);
+        Logdat($line);
+        
+        if ($line == "---\n") break;
+    }
+    
+    for ($inx = 0; $inx <= 100; $inx++)
+    {
+    	$line = "Done $inx%\n";
+		$hlen = dechex(strlen($line));
+		
+    	fwrite($fp,"$hlen\r\n");
+    	fwrite($fp,$line);
+    	fwrite($fp,"\r\n");
+    	fflush($fp);
+    	
+		Logdat($line);
+    	
+    	usleep(100000);
+    }
+    
+    fclose($fp);
+}
 
 //
 // Shutdown signal handler.
@@ -105,6 +160,8 @@ function MainLoop($selfname)
 		Logdat("Alive...\n");
 		
 		Logflush();
+		
+		Getjob();
 		
 		sleep(3);
 	}
