@@ -29,11 +29,11 @@ The following config needs to be added to apache/httpd.conf, where "/Users/dezi"
         
     </Directory>
 
-<IfModule alias_module>
-
-    AliasMatch ^/(status) "/Users/dezi/xdcamtar/server/php/$1.php"
-    AliasMatch ^/(tarman) "/Users/dezi/xdcamtar/server/php/$1.php"
-    AliasMatch ^/(output) "/Users/dezi/xdcamtar/server/php/$1.php"
-    AliasMatch ^/(getjob) "/Users/dezi/xdcamtar/server/php/$1.php"
-
-</IfModule>
+    <IfModule alias_module>
+    
+        AliasMatch ^/(status) "/Users/dezi/xdcamtar/server/php/$1.php"
+        AliasMatch ^/(tarman) "/Users/dezi/xdcamtar/server/php/$1.php"
+        AliasMatch ^/(output) "/Users/dezi/xdcamtar/server/php/$1.php"
+        AliasMatch ^/(getjob) "/Users/dezi/xdcamtar/server/php/$1.php"
+    
+    </IfModule>
