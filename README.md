@@ -7,33 +7,33 @@ The following config needs to be added to apache/httpd.conf, where "/Users/dezi"
 
 DocumentRoot "/Users/dezi/xdcamtar/server/www"
 
-<Directory "/Users/dezi/xdcamtar/server/www">
+\<Directory "/Users/dezi/xdcamtar/server/www"\>
 
     Options Indexes FollowSymLinks MultiViews
     Order allow,deny
     Allow from all
     
-    <Limit GET POST PUT DELETE HEAD OPTIONS>
+    \<Limit GET POST PUT DELETE HEAD OPTIONS>
         Order allow,deny
         Allow from all
-    </Limit>
+    \</Limit\>
 
-</Directory>
+\</Directory\>
 
-<Directory "/Users/dezi/xdcamtar/server/php">
+\<Directory "/Users/dezi/xdcamtar/server/php"\>
 
     AllowOverride None
     Options None
     Order allow,deny
     Allow from all
     
-</Directory>
+\</Directory\>
 
-<IfModule alias_module>
+\<IfModule alias_module\>
 
     AliasMatch ^/(status) "/Users/dezi/xdcamtar/server/php/$1.php"
     AliasMatch ^/(tarman) "/Users/dezi/xdcamtar/server/php/$1.php"
     AliasMatch ^/(output) "/Users/dezi/xdcamtar/server/php/$1.php"
     AliasMatch ^/(getjob) "/Users/dezi/xdcamtar/server/php/$1.php"
 
-</IfModule>
+\</IfModule\>
