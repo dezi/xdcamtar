@@ -1,4 +1,7 @@
+.DS_Store
 .DS_STORE
+._.DS_Store
+._.DS_STORE
 server/out
 server/tmp
 encoder/tmp
