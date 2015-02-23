@@ -82,7 +82,7 @@ function Getjob()
 {
 	$self    = $GLOBALS[ "hostname" ];
 	$uname   = $GLOBALS[ "uname"    ];
-	$version = $GLOBALS[ "version"  ];
+	$encoder = $GLOBALS[ "encoder"  ];
 	
 	foreach ($GLOBALS[ "servers" ] as $host)
 	{ 	
