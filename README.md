@@ -35,5 +35,6 @@ The following config needs to be added to apache/httpd.conf, where "/Users/dezi"
         AliasMatch ^/(tarman) "/Users/dezi/xdcamtar/server/php/$1.php"
         AliasMatch ^/(output) "/Users/dezi/xdcamtar/server/php/$1.php"
         AliasMatch ^/(getjob) "/Users/dezi/xdcamtar/server/php/$1.php"
+        AliasMatch ^/(update) "/Users/dezi/xdcamtar/server/php/$1.php"
     
     </IfModule>

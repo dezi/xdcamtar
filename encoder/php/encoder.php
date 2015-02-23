@@ -93,14 +93,45 @@ function JobIdle($fp,$job)
 
 function JobUpdate($fp,$job)
 {
+	$success = true;
+	
     WriteChunkedLine($fp,"Updating files and config...\n");
     
     foreach ($job[ "update" ][ "files" ] as $file)
     {
 		WriteChunkedLine($fp,"Requesting $file.\n");
-    }
+		
+		$host = $GLOBALS[ "acthost" ];
+		$port = $GLOBALS[ "actport" ];
+		
+		$updurl = "http://$host:$port/update/$file";
+		$upcont = file_get_contents($updurl);
+		$upsize = strlen($upcont);
+		
+		WriteChunkedLine($fp,"Downloaded $updurl => $upsize.\n");
+		
+		$localfile = "../$file";
+		
+		//if (strstr($localfile,"encoder.php") !== false) continue;
+		
+		if (file_put_contents($localfile,$upcont) === false)
+		{
+			$success = false;
+		}
+ 		
+ 		WriteChunkedLine($fp,"Wrote local $localfile => $upsize.\n");
+	}
     
-    WriteChunkedLine($fp,"Updating files and config done.\n");
+    if ($success)
+    {
+    	WriteChunkedLine($fp,"Updating files and config done.\n");
+    	
+    	$GLOBALS[ "restart" ] = true;
+    }
+    else
+    {
+    	WriteChunkedLine($fp,"Updating files and config failed.\n");
+    }
     
     return true;
 }
@@ -123,7 +154,13 @@ function Getjob()
 		
 		$fp = @fsockopen($host,$port,$errno,$errstr,2);
 	
-		if ($fp) break;
+		if ($fp) 
+		{
+			$GLOBALS[ "acthost" ] = $host;
+			$GLOBALS[ "actport" ] = $port;
+			
+			break;
+		}
 	}
 	
 	if (! $fp) 
@@ -210,6 +247,7 @@ function MainLoop($selfname)
 	declare(ticks = 1);
 	
 	$GLOBALS[ "shutdown" ] = false;
+	$GLOBALS[ "restart"  ] = false;
 	
     if (function_exists("pcntl_signal"))
     {
@@ -230,20 +268,31 @@ function MainLoop($selfname)
 	
 	file_put_contents("../run/$selfname.pid",getmypid());
 	
-	Logdat("Starting.\n");
+	Logdat("Starting version " . $GLOBALS[ "encoder"  ] . ".\n");
 	
-	while (! $GLOBALS[ "shutdown" ])
+	while ((! $GLOBALS[ "shutdown" ]) && (! $GLOBALS[ "restart" ]))
 	{			
 		Logdat("Alive...\n");
 		
 		Logflush();
-		
-		Getjob();
-		
+				
 		sleep(3);
+
+		Getjob();
 	}
 	
-	Logdat("Exitting.\n");
+	if ($GLOBALS[ "restart" ] && ! $GLOBALS[ "shutdown" ])
+	{
+		Logdat("Restarting.\n");
+		Logdat("===========\n");
+		
+		pcntl_exec($_SERVER['_'],$_SERVER[ "argv" ]);
+	}
+	else
+	{
+		Logdat("Exitting.\n");
+		Logdat("=========\n");
+	}
 	
 	exit(0);
 }
@@ -253,7 +302,7 @@ function Main()
 	date_default_timezone_set("UTC");
 	
 	$selfname = $_SERVER[ "argv" ][ 0 ];
-		
+	
 	MainLoop($selfname);
 }
 
