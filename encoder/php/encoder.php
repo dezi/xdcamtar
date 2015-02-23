@@ -147,6 +147,8 @@ function Shutdown($signo)
 	$GLOBALS[ "shutdown" ] = true;
 	
 	Logdat("Received shutdown signal...\n");
+	
+	Logflush();
 }
 
 //
