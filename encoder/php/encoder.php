@@ -65,13 +65,44 @@ function Logdat($message)
 function WriteChunkedLine($fp,$line)
 {
 	$hlen = dechex(strlen($line));
-		
+
     fwrite($fp,"$hlen\r\n");
     fwrite($fp,$line);
     fwrite($fp,"\r\n");
     fflush($fp);
     	
 	Logdat($line);
+}
+
+//
+// Do idle job.
+//
+
+function JobIdle($fp,$job)
+{
+    WriteChunkedLine($fp,"Nothing to do.\n");
+    	
+    usleep(1000000);
+
+    return true;
+}
+
+//
+// Do idle job.
+//
+
+function JobUpdate($fp,$job)
+{
+    WriteChunkedLine($fp,"Updating files and config...\n");
+    
+    foreach ($job[ "update" ][ "files" ] as $file)
+    {
+		WriteChunkedLine($fp,"Requesting $file.\n");
+    }
+    
+    WriteChunkedLine($fp,"Updating files and config done.\n");
+    
+    return true;
 }
 
 //
@@ -103,7 +134,7 @@ function Getjob()
 	}
 	
 	Logdat("Connected to $host:$port.\n");
-	
+		
 	fwrite($fp,"GET /getjob HTTP/1.1\r\n");
     fwrite($fp,"Host: $host\r\n");
     fwrite($fp,"XDC-Host: $self\r\n");
@@ -113,7 +144,10 @@ function Getjob()
     fwrite($fp,"\r\n");
     fflush($fp);
     
+    stream_set_timeout($fp,5);
+
     $json = "";
+    $head = true;
     
     while (true) 
     {
@@ -122,18 +156,34 @@ function Getjob()
     	$line = fgets($fp,512);
         Logdat($line);
         
+        if ($head) 
+        {
+        	$head = ($line != "\r\n");
+    		
+    		continue;
+    	}
+    	
         if ($line == "---\n") break;
         
         $json .= $line;
     }
+
+    stream_set_timeout($fp,60);
     
     $job = json_decode($json,true);
     
     WriteChunkedLine($fp,"Start job processing...\n");
-
-    usleep(1000000);
+	
+	if (isset($job[ "idle"   ])) JobIdle  ($fp,$job);
+	if (isset($job[ "update" ])) JobUpdate($fp,$job);
    
     WriteChunkedLine($fp,"Done job processing.\n");
+    
+    //
+    // Final dummy chunk and close.
+    //
+    
+    WriteChunkedLine($fp,"");
     
     fclose($fp);
 }
