@@ -3,8 +3,11 @@
 $GLOBALS[ "uname"    ] = trim(`uname`);
 $GLOBALS[ "hostname" ] = trim(`hostname`);
 
-$GLOBALS[ "server_host" ] = "dezimac.local";
-$GLOBALS[ "server_port" ] = 80;
+$GLOBALS[ "servers"  ] = 
+{ 
+	"PC15930.spiegel.de:8880", 
+	"dezimac.local:80" 
+};
 
 function Logflush()
 {
@@ -57,25 +60,49 @@ function Logdat($message)
 }
 
 //
+// Write chunked line to server with log.
+//
+
+function WriteChunkedLine($fp,$line)
+{
+	$hlen = dechex(strlen($line));
+		
+    fwrite($fp,"$hlen\r\n");
+    fwrite($fp,$line);
+    fwrite($fp,"\r\n");
+    fflush($fp);
+    	
+	Logdat($line);
+}
+
+//
 // Get encoding job from server.
 //
 
 function Getjob()
 {
-	$host = $GLOBALS[ "server_host" ];
-	$port = $GLOBALS[ "server_port" ];
-	
 	$self = $GLOBALS[ "hostname" ];
 	$unam = $GLOBALS[ "uname"    ];
 	
-	$fp = @fsockopen($host,$port,$errno,$errstr,30);
+	foreach ($GLOBALS[ "servers" ] as $host)
+	{ 	
+		$host = explode(":",$host);
+		$port = $host[ 1 ];
+		$host = $host[ 0 ];
+		
+		$fp = @fsockopen($host,$port,$errno,$errstr,2);
 	
-	if (!$fp) 
-	{
-    	Logdat("Failed server connect $host:$port\n");
-    	
-    	return;
+		if ($fp) break;
 	}
+	
+	if (! $fp) 
+	{
+		Logdat("No server available.\n");
+		
+		return;
+	}
+	
+	Logdat("Connected to $host:$port.\n");
 	
 	fwrite($fp,"GET /getjob HTTP/1.1\r\n");
     fwrite($fp,"Host: $host\r\n");
@@ -95,20 +122,11 @@ function Getjob()
         if ($line == "---\n") break;
     }
     
-    for ($inx = 0; $inx <= 100; $inx++)
-    {
-    	$line = "Done $inx%\n";
-		$hlen = dechex(strlen($line));
-		
-    	fwrite($fp,"$hlen\r\n");
-    	fwrite($fp,$line);
-    	fwrite($fp,"\r\n");
-    	fflush($fp);
-    	
-		Logdat($line);
-    	
-    	usleep(100000);
-    }
+    WriteChunkedLine($fp,"Start job processing...\n");
+
+    usleep(1000000);
+   
+    WriteChunkedLine($fp,"Done job processing.\n");
     
     fclose($fp);
 }
