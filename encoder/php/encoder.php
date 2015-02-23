@@ -1,10 +1,12 @@
 <?php
 
-$GLOBALS[ "uname"    ] = trim(`uname`);
-$GLOBALS[ "hostname" ] = trim(`hostname`);
+$GLOBALS[ "encoder"  ] = "1.0.0.1000";
 
 $GLOBALS[ "servers"  ][] = "PC15930.spiegel.de:8880";
 $GLOBALS[ "servers"  ][] = "dezimac.local:80";
+
+$GLOBALS[ "uname"    ] = trim(`uname`);
+$GLOBALS[ "hostname" ] = trim(`hostname`);
 
 function Logflush()
 {
@@ -78,8 +80,9 @@ function WriteChunkedLine($fp,$line)
 
 function Getjob()
 {
-	$self = $GLOBALS[ "hostname" ];
-	$unam = $GLOBALS[ "uname"    ];
+	$self    = $GLOBALS[ "hostname" ];
+	$uname   = $GLOBALS[ "uname"    ];
+	$version = $GLOBALS[ "version"  ];
 	
 	foreach ($GLOBALS[ "servers" ] as $host)
 	{ 	
@@ -104,20 +107,27 @@ function Getjob()
 	fwrite($fp,"GET /getjob HTTP/1.1\r\n");
     fwrite($fp,"Host: $host\r\n");
     fwrite($fp,"XDC-Host: $self\r\n");
-    fwrite($fp,"XDC-Unam: $unam\r\n");
+    fwrite($fp,"XDC-Uname: $uname\r\n");
+    fwrite($fp,"XDC-Encoder: $encoder\r\n");
     fwrite($fp,"Transfer-Encoding: chunked\r\n");
     fwrite($fp,"\r\n");
     fflush($fp);
+    
+    $json = "";
     
     while (true) 
     {
     	if (feof($fp)) break;
     	
-    	$line = fgets($fp,128);
+    	$line = fgets($fp,512);
         Logdat($line);
         
         if ($line == "---\n") break;
+        
+        $json .= $line;
     }
+    
+    $job = json_decode($json,true);
     
     WriteChunkedLine($fp,"Start job processing...\n");
 
