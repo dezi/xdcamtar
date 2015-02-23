@@ -3,11 +3,8 @@
 $GLOBALS[ "uname"    ] = trim(`uname`);
 $GLOBALS[ "hostname" ] = trim(`hostname`);
 
-$GLOBALS[ "servers"  ] = 
-{ 
-	"PC15930.spiegel.de:8880", 
-	"dezimac.local:80" 
-};
+$GLOBALS[ "servers"  ][] = "PC15930.spiegel.de:8880";
+$GLOBALS[ "servers"  ][] = "dezimac.local:80";
 
 function Logflush()
 {
