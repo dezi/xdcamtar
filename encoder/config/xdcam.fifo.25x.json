@@ -26,7 +26,7 @@
 				"aspect",	"--sar 1:1",
 
 				"profile", 	"--profile baseline",
-				"preset",   "--preset medium",
+				"preset",   "--preset veryfast",
 				"tune",  	"--tune grain",
 				
 				"muxing",	"--demuxer y4m --muxer raw",
