@@ -176,7 +176,7 @@ function JobXDCAMEncode()
 		}
 	}
 	
-	arsort($candidates);
+	asort($candidates);
 	
 	foreach ($candidates as $name => $size)
 	{
