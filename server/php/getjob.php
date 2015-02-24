@@ -72,7 +72,12 @@ function ProcessRequest()
 		}
 	}
 
-	if ($ld !== false) fclose($ld);
+	if ($ld !== false) 
+	{
+		flock($ld,LOCK_UN);
+		
+		fclose($ld);
+	}
 	
 	fclose($pd);
 
@@ -128,40 +133,107 @@ function GetDirectoryListing($dir,$suffix = null)
 
 function JobXDCAMEncode()
 {
+	$job = null;
+
+	//
+	// Get all tarballs in uploaded directory.
+	//
+	
 	$tardir   = "../tmp/xdcam/tarballs";
 	$tarballs = GetDirectoryListing($tardir,".tar");
 	
 	if (($tarballs === null) || ! count($tarballs)) return null;
 	
-	foreach($tarballs as $tarball)
+	$candidates = array();
+	
+	foreach ($tarballs as $tarball)
 	{
 		error_log("TARBALL: $tarball");
+
+		$tarcont = get_tar_content($tarball);
+		
+		foreach ($tarcont as $tarfile)
+		{
+			$name = $tarfile[ "name" ];
+			$size = $tarfile[ "size" ];
+			
+			if (substr($name,-7) != "V01.MXF") continue;
+			
+			if ($size < 200000000) 
+			{
+				//
+				// Technical filler clip is skipped.
+				//
+				
+				continue;
+			}
+			
+			$xmloutpath = "../out/xdcam/previews/" . substr($name,0,-4) . ".xml";
+			
+			if (file_exists($xmloutpath)) continue;
+			
+			$candidates[ $name ] = $size;
+		}
 	}
 	
-	$job[ "encode" ][ "options" ][ "--config"      ] = "config.dezi-osx.json";
-	$job[ "encode" ][ "options" ][ "--profile"     ] = "profile.XDCAM-Preview.json";
-	$job[ "encode" ][ "options" ][ "--logprocess"  ] = "true";
-	$job[ "encode" ][ "options" ][ "--logprogres"  ] = "true";
-	$job[ "encode" ][ "options" ][ "--usehttpd"    ] = "true";
-
-	$job[ "encode" ][ "options" ][ "--inputvideo"  ] = "/tarman/xdcam/tarballs/77345.tar/77345/XDCAM/PROAV/CLPR/C0005/C0005V01.MXF";
-	$job[ "encode" ][ "options" ][ "--outputdir"   ] = "/output/xdcam/previews/77345/XDCAM/PROAV/CLPR/C0005";
-	$job[ "encode" ][ "options" ][ "--inputvideo"  ] = "/tarman/xdcam/tarballs/77345.tar/77345/XDCAM/PROAV/CLPR/C0004/C0004V01.MXF";
-	$job[ "encode" ][ "options" ][ "--outputdir"   ] = "/output/xdcam/previews/77345/XDCAM/PROAV/CLPR/C0004";
-
+	arsort($candidates);
 	
-	$logfile = "../out/xdcam/previews/77345/XDCAM/PROAV/CLPR/C0004/C0004V01.log";
-	$logdir  = pathinfo($logfile,PATHINFO_DIRNAME);
+	foreach ($candidates as $name => $size)
+	{
+		$path = pathinfo($name,PATHINFO_DIRNAME);
+
+		$docnum = explode("/",$name);
+		$docnum = $docnum[ 0 ];
+
+		error_log("candidate: $docnum => $name => $size");
+		
+		//
+		// Try to open and lock logfile.
+		//
+		
+		$logfile = "../out/xdcam/previews/" . substr($name,0,-4) . ".log";
+		$logdir  = pathinfo($logfile,PATHINFO_DIRNAME);
 	
-	if (! file_exists($logdir)) 
-	{ 
-		umask(0); 
-		mkdir($logdir,0777,true);
-	} 
+		if (! file_exists($logdir)) 
+		{ 
+			umask(0); 
+			mkdir($logdir,0777,true);
+		}
 		
-	$GLOBALS[ "logfile" ] = fopen($logfile,"w");
+		$logfd = fopen($logfile,"w");
 		
-	error_log("Opened $logfile => " . $GLOBALS[ "logfile" ]);
+		if (! flock($logfd,LOCK_EX | LOCK_NB))
+		{
+			//
+			// Some other process is busy on this.
+			//
+			
+			error_log("Cannot get lock on $logfile, skipping...");
+	
+			fclose($logfd);
+			
+			continue;
+		}
+		
+		//
+		// We hold a lock on the logfile now.
+		//
+		
+		$GLOBALS[ "logfile" ] = fopen($logfile,"w");
+		
+		error_log("Opened and locked $logfile => " . $GLOBALS[ "logfile" ]);
+
+		$job[ "encode" ][ "options" ][ "--config"      ] = "config.dezi-osx.json";
+		$job[ "encode" ][ "options" ][ "--profile"     ] = "profile.XDCAM-Preview.json";
+		$job[ "encode" ][ "options" ][ "--logprocess"  ] = "true";
+		$job[ "encode" ][ "options" ][ "--logprogres"  ] = "true";
+		$job[ "encode" ][ "options" ][ "--usehttpd"    ] = "true";
+
+		$job[ "encode" ][ "options" ][ "--inputvideo"  ] = "/tarman/xdcam/tarballs/$docnum.tar/$name";
+		$job[ "encode" ][ "options" ][ "--outputdir"   ] = "/output/xdcam/previews/$path";
+		
+		break;
+	}
 
 	return $job;
 }

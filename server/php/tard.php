@@ -81,7 +81,7 @@ function get_tar_content($tarpath,$tarcont = null)
 			// Pass through file entry.
 			//
 			
-			error_log("tarman size: $size\n");
+			error_log("tarman size: $size");
 			
 			$todo = $size;
 			
@@ -98,7 +98,7 @@ function get_tar_content($tarpath,$tarcont = null)
 				$todo -= strlen($content);
 			}
 			
-			error_log("tarman done\n");
+			error_log("tarman done");
 
 			break;
 		}
