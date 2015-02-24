@@ -1,6 +1,6 @@
 <?php
 
-$GLOBALS[ "encoder"  ] = "1.0.0.1000";
+$GLOBALS[ "encoder"  ] = "1.0.0.1001";
 
 $GLOBALS[ "servers"  ][] = "PC15930.spiegel.de:8880";
 $GLOBALS[ "servers"  ][] = "dezimac.local:80";

@@ -1,48 +1,190 @@
 <?php
 
 //
-// Start clean output buffer.
+// Version definitions.
 //
 
-ob_end_clean();
-ob_start();
+$GLOBALS[ "encoder"  ] = "1.0.0.1001";
+$GLOBALS[ "vserver"  ] = "1.0.0.1000";
 
 //
-// Prepare response.
+// Local includes.
 //
 
-var_dump($_SERVER);
-
-echo "\n---\n";
-
-//
-// Finalize output and flush.
-//
-
-$size = ob_get_length();
-
-header("Content-type: text/plain; charset=utf-8");
-header("Content-Length: $size");
-header("Connection: close");
-
-ob_end_flush();
-flush();
+include("./json.php");
+include("./tard.php");
 
 //
-// Listen for progress and result.
+// Process a clients get job request.
 //
 
-$pd = fopen("php://input","r");
-
-error_log("Flushed $pd");
-
-while ($line = fgets($pd,128))
+function ProcessRequest()
 {
-	error_log(trim($line));
+	//
+	// Start clean output buffer.
+	//
+
+	ob_end_clean();
+	ob_start();
+
+	//
+	// Figure out what to do.
+	//
+
+	$job = GetJob();
+
+	echo json_encdat($job);
+
+	echo "\n---\n";
+
+	//
+	// Finalize output and flush.
+	//
+
+	$size = ob_get_length();
+
+	header("Content-type: text/plain; charset=utf-8");
+	header("Content-Length: $size");
+	header("Connection: close");
+
+	ob_end_flush();
+	flush();
+
+	//
+	// Listen for progress and result.
+	//
+
+	$pd = fopen("php://input","r");
+	
+	error_log("Opened php://input => $pd");
+	
+	$ld = isset($GLOBALS[ "logfile" ]) ? $GLOBALS[ "logfile" ] : false;
+
+	while (($line = fgets($pd,128)) !== false)
+	{
+		if ($ld === false) 
+		{
+			error_log(trim($line));
+		}
+		else
+		{
+			fputs($ld,$line);
+		}
+	}
+
+	if ($ld !== false) fclose($ld);
+	
+	fclose($pd);
+
+	error_log("Done $pd");
 }
 
-fclose($pd);
+//
+// Get job.
+//
 
-error_log("Done $pd");
+function GetJob()
+{
+	error_log($_SERVER[ "HTTP_XDC_ENCODER" ]);
+	
+	if (($job = JobUpdateSoftware()) !== null) return $job;
+	
+	if (($job = JobXDCAMEncode())    !== null) return $job;
+	
+	return JobIdle();
+}
+
+//
+// Job: encode video.
+//
+
+function JobXDCAMEncode()
+{
+	$job[ "encode" ][ "options" ][ "--config"      ] = "config.dezi-osx.json";
+	$job[ "encode" ][ "options" ][ "--profile"     ] = "profile.XDCAM-Preview.json";
+	$job[ "encode" ][ "options" ][ "--logprocess"  ] = "true";
+	$job[ "encode" ][ "options" ][ "--logprogres"  ] = "true";
+	$job[ "encode" ][ "options" ][ "--usehttpd"    ] = "true";
+
+	$job[ "encode" ][ "options" ][ "--inputvideo"  ] = "/tarman/xdcam/tarballs/77345.tar/77345/XDCAM/PROAV/CLPR/C0005/C0005V01.MXF";
+	$job[ "encode" ][ "options" ][ "--outputdir"   ] = "/output/xdcam/previews/77345/XDCAM/PROAV/CLPR/C0005";
+	$job[ "encode" ][ "options" ][ "--inputvideo"  ] = "/tarman/xdcam/tarballs/77345.tar/77345/XDCAM/PROAV/CLPR/C0004/C0004V01.MXF";
+	$job[ "encode" ][ "options" ][ "--outputdir"   ] = "/output/xdcam/previews/77345/XDCAM/PROAV/CLPR/C0004";
+
+	
+	$logfile = "../out/xdcam/previews/77345/XDCAM/PROAV/CLPR/C0004/C0004V01.log";
+	$logdir  = pathinfo($logfile,PATHINFO_DIRNAME);
+	
+	if (! file_exists($logdir)) 
+	{ 
+		umask(0); 
+		mkdir($logdir,0777,true);
+	} 
+		
+	$GLOBALS[ "logfile" ] = fopen($logfile,"w");
+		
+	error_log("Opened $logfile => " . $GLOBALS[ "logfile" ]);
+
+	return $job;
+}
+
+//
+// Job: update encoder software.
+//
+
+function JobUpdateSoftware()
+{
+	if ($_SERVER[ "HTTP_XDC_ENCODER" ] == $GLOBALS[ "encoder" ])
+	{
+		return null;
+	}
+
+	$encoderdir   = "../../encoder";
+	
+	$encodersub[] = "rcd";
+	$encodersub[] = "php";
+	$encodersub[] = "config";
+	$encodersub[] = "config/bin";
+	
+	foreach ($encodersub as $subdir)
+	{
+		$dfd = opendir("$encoderdir/$subdir");
+	
+		if (! $dfd) continue;
+		
+		while (($file = readdir($dfd)) !== false)
+		{
+			if ($file == ".") continue;
+			if ($file == "..") continue;
+			if ($file == ".DS_Store") continue;
+			if ($file == "._.DS_Store") continue;
+			
+			if (is_dir("$encoderdir/$subdir/$file")) continue;
+			
+			$job[ "update" ][ "files" ][] = "$subdir/$file";
+		}
+		
+		closedir($dfd);
+	}
+	
+	return $job;
+}
+
+//
+// Job: do nothing.
+//
+
+function JobIdle()
+{
+	$job[ "idle" ] = array();
+	
+	return $job;
+}
+
+//
+// Main request processing.
+//
+ 
+ProcessRequest();
 
 ?>
