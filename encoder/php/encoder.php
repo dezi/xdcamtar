@@ -88,7 +88,124 @@ function JobIdle($fp,$job)
 }
 
 //
-// Do idle job.
+// Do video encode job.
+//
+
+function JobEncode($fp,$job)
+{
+	$success = true;
+
+    WriteChunkedLine($fp,"Encoding video...\n");
+
+	$host = $GLOBALS[ "acthost" ];
+	$port = $GLOBALS[ "actport" ];
+
+	//
+	// Relocate options paths.
+	//
+	
+	$options = "";
+	
+	foreach ($job[ "encode" ][ "options" ] as $option => $value)
+	{
+		if ($option == "--config")
+		{
+			$file = "./" . $value;
+    		
+    		$job[ "encode" ][ "options" ][ $option ] = $file;
+    		
+    		WriteChunkedLine($fp,"Config $file\n");
+		}
+
+		if ($option == "--profile")
+		{
+			$file = $value;
+    		
+    		$job[ "encode" ][ "options" ][ $option ] = $file;
+    		
+    		WriteChunkedLine($fp,"Profile $file\n");
+		}
+
+		if ($option == "--inputvideo")
+		{
+			$url = "http://$host:$port" . $value;
+    		
+    		$job[ "encode" ][ "options" ][ $option ] = $url;
+    		
+    		WriteChunkedLine($fp,"Inputvideo $url\n");
+		}
+
+		if ($option == "--outputdir")
+		{
+			$url = "http://$host:$port" . $value;
+    		
+    		$job[ "encode" ][ "options" ][ $option ] = $url;
+    		
+    		WriteChunkedLine($fp,"Outputdir $url\n");
+		}
+		
+		$options .= " $option " . $job[ "encode" ][ "options" ][ $option ]; 
+	}
+	
+	//
+	// Prepare command line.
+	//
+   	
+   	$cmd = "java -jar ./bin/Kappa.UX " . trim($options);
+    
+    WriteChunkedLine($fp,"CMD: $cmd\n");
+    
+    $pspec = array(1 => array("pipe","w"),2 => array("pipe","w"));
+    
+    $pipe = array();
+    $proc = proc_open($cmd,$pspec,$pipe,"../config");
+
+    stream_set_blocking($pipe[ 1 ],false);
+    stream_set_blocking($pipe[ 2 ],false);
+
+	while (true)
+	{
+        $line = fgets($pipe[ 1 ]);
+       
+        if ($line !== false)
+        {
+    		WriteChunkedLine($fp,"stdout:" . trim($line) . "\n");
+    		
+    		continue;
+        }
+        
+        $line = fgets($pipe[ 2 ]);
+       
+        if ($line !== false)
+        {
+     		WriteChunkedLine($fp,"stderr:" . trim($line) . "\n");
+    		
+    		continue;
+		}
+        
+        $pstat = proc_get_status($proc);
+        
+        if (! $pstat[ "running" ]) break;
+        
+        usleep(1000);
+    }
+	
+	proc_terminate($proc);
+
+    if ($success)
+    {
+    	WriteChunkedLine($fp,"Encoding video done.\n");
+    }
+    else
+    {
+    	WriteChunkedLine($fp,"Encoding video failed.\n");
+    }
+    
+    return true;
+}
+
+//
+// Do update software job.
 //
 
 function JobUpdate($fp,$job)
@@ -191,7 +308,8 @@ function Getjob()
     	if (feof($fp)) break;
     	
     	$line = fgets($fp,512);
-        Logdat($line);
+        
+        //Logdat($line);
         
         if ($head) 
         {
@@ -213,6 +331,7 @@ function Getjob()
 	
 	if (isset($job[ "idle"   ])) JobIdle  ($fp,$job);
 	if (isset($job[ "update" ])) JobUpdate($fp,$job);
+	if (isset($job[ "encode" ])) JobEncode($fp,$job);
    
     WriteChunkedLine($fp,"Done job processing.\n");
     
