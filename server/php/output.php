@@ -7,7 +7,13 @@ if (substr($output,0,8) != "/output/") exit();
 
 $output = "../out" . substr($output,7);
 $outdir = pathinfo($output,PATHINFO_DIRNAME);
-$outsiz = intval($_SERVER[ "HTTP_CONTENT_SIZE" ]);
+$outsiz = intval($_SERVER[ "CONTENT_LENGTH" ]);
+
+$headers = getallheaders();
+foreach ($headers as $key => $val)
+{
+	error_log("xxxx: $key => $val");
+}
 
 umask (0);
 

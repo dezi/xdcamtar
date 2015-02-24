@@ -94,12 +94,50 @@ function GetJob()
 	return JobIdle();
 }
 
+function GetDirectoryListing($dir,$suffix = null)
+{
+	$dfd = opendir($dir);
+	
+	if ($dfd === false) return null;
+	
+	$list = array();
+	
+	while (($file = readdir($dfd)) !== false)
+	{
+		if ($file == ".") continue;
+		if ($file == "..") continue;
+		if ($file == ".DS_Store") continue;
+		if ($file == "._.DS_Store") continue;
+		
+		if (($suffix !== null) && substr($file,-strlen($suffix)) != $suffix)
+		{
+			continue;
+		}
+		
+		array_push($list,"$dir/$file");
+	}
+	
+	closedir($dfd);
+	
+	return $list;
+}
+
 //
 // Job: encode video.
 //
 
 function JobXDCAMEncode()
 {
+	$tardir   = "../tmp/xdcam/tarballs";
+	$tarballs = GetDirectoryListing($tardir,".tar");
+	
+	if (($tarballs === null) || ! count($tarballs)) return null;
+	
+	foreach($tarballs as $tarball)
+	{
+		error_log("TARBALL: $tarball");
+	}
+	
 	$job[ "encode" ][ "options" ][ "--config"      ] = "config.dezi-osx.json";
 	$job[ "encode" ][ "options" ][ "--profile"     ] = "profile.XDCAM-Preview.json";
 	$job[ "encode" ][ "options" ][ "--logprocess"  ] = "true";
