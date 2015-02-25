@@ -169,6 +169,8 @@ function JobEncode($fp,$job)
        
         if ($line !== false)
         {
+    		if (trim($line) === "") continue;
+    		
     		WriteChunkedLine($fp,"stdout:" . trim($line) . "\n");
     		
     		continue;
@@ -178,6 +180,8 @@ function JobEncode($fp,$job)
        
         if ($line !== false)
         {
+    		if (trim($line) === "") continue;
+     		
      		WriteChunkedLine($fp,"stderr:" . trim($line) . "\n");
     		
     		continue;
@@ -307,7 +311,7 @@ function Getjob()
     {
     	if (feof($fp)) break;
     	
-    	$line = fgets($fp,512);
+    	$line = fgets($fp);
         
         //Logdat($line);
         
