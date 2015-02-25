@@ -42,13 +42,14 @@
 	
 	executables:
 	[
-		"bin/exec.x264.%%arch%%.static.20140303",
-		"bin/exec.ffmpeg.%%arch%%.static.20140303",
-		"bin/exec.ffprobe.%%arch%%.static.20140303",
-		"bin/exec.fifoman.%%arch%%.static.20140303",
-		"bin/exec.MP4Box.%%arch%%.static.20140303",
-		"bin/exec.writeavidmxf.%%arch%%.static.20140303",
-		"bin/exec.nv264.%%arch%%.static.20140303",
-		"bin/exec.vpxenc.%%arch%%.static.20140303"
+		"bin/exec.x264.%%arch%%.static.20150218",
+		"bin/exec.x265.%%arch%%.static.20150218",
+		"bin/exec.ffmpeg.%%arch%%.static.20150218",
+		"bin/exec.ffprobe.%%arch%%.static.20150218",
+		"bin/exec.fifoman.%%arch%%.static.20150218",
+		"bin/exec.MP4Box.%%arch%%.static.20150218",
+		"bin/exec.writeavidmxf.%%arch%%.static.20150218",
+		"bin/exec.nv264.%%arch%%.static.20150218",
+		"bin/exec.vpxenc.%%arch%%.static.20150218"
 	]
 }
