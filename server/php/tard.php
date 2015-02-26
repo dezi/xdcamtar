@@ -9,6 +9,18 @@ function get_tar_content($tarpath,$tarcont = null)
 		$tarcont = null;
 	}
 	
+	//
+	// Check for MXF essence extraction.
+	//
+	
+	$wantpcm = false;
+	
+	if (strtolower(substr($tarpath,-8)) == ".mxf.pcm")
+	{
+		$tarpath = substr($tarpath,0,-4);
+		$wantpcm = true;
+	}
+	
 	$tarfd = fopen($tarpath,"r");
 	
 	$curpos = 0;
@@ -83,19 +95,103 @@ function get_tar_content($tarpath,$tarcont = null)
 			
 			error_log("tarman: $file => $size");
 			
-			$todo = $size;
-			
-			while ($todo > 0)
+			if ($wantpcm)
 			{
-				$xfer = $todo;
+				//
+				// Parse MXF file and extract essence.
+				//
 				
-				if ($xfer > 32 * 1024) $xfer = 32 * 1024;
-				
-				$content = fread($tarfd,$xfer);
+				$todo = $size;
+			
+				while ($todo > 0)
+				{
+					$oidmgc = fread($tarfd,1);
+	
+					if (($oidmgc === false) || (strlen($oidmgc) == 0)) break;
+	
+					if (ord($oidmgc[ 0 ]) != 0x06) break;
+	
+					$oidlen = fread($tarfd,1);
+	
+					if (ord($oidlen[ 0 ]) != 0x0e) break;
+	
+					$oidval = fread($tarfd,14);
+	
+					$todo -= 16;
+					
+					$payber = fread($tarfd,1);
+	
+					$todo -= 1;
+					
+					if ((ord($payber[ 0 ]) & 0x80) == 0x80)
+					{
+						$paylen = ord($payber[ 0 ]) & 0x7f;
 		
-				echo $content;
+						$contraw = fread($tarfd,$paylen);
+						
+						$todo -= $paylen;
+						
+						$contlen = 0;
+			
+						for ($inx = 0; $inx < $paylen; $inx++)
+						{
+							$contlen = ($contlen << 8) + ord($contraw[ $inx ]);
+						}
+					}
+					else
+					{
+						$contlen = ord($payber[ 0 ]) & 0x7f;
+					}
+	
+					if (bin2hex($oidval) == "2b34010201010d01030116010400")
+					{
+						//
+						// We have now the essence to read.
+						//
+						
+						$elen = $contlen;
+						
+						while ($elen > 0)
+						{
+							$xfer = $elen;
 				
-				$todo -= strlen($content);
+							if ($xfer > 32 * 1024) $xfer = 32 * 1024;
+				
+							$content = fread($tarfd,$xfer);
+		
+							echo $content;
+				
+							$elen -= strlen($content);
+						}
+					}
+					else
+					{
+						fseek($tarfd,$contlen,SEEK_CUR);
+					}
+					
+					$todo -= $contlen;
+				}
+			}
+			else
+			{
+				//
+				// Plain reading of contained file.
+				//
+				
+				$todo = $size;
+			
+				while ($todo > 0)
+				{
+					$xfer = $todo;
+				
+					if ($xfer > 32 * 1024) $xfer = 32 * 1024;
+				
+					$content = fread($tarfd,$xfer);
+		
+					echo $content;
+				
+					$todo -= strlen($content);
+				}
 			}
 			
 			error_log("tarman: $file => done");
