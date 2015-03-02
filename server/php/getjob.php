@@ -219,7 +219,7 @@ function JobXDCAMEncode()
 		// We hold a lock on the logfile now.
 		//
 		
-		$GLOBALS[ "logfile" ] = fopen($logfile,"w");
+		$GLOBALS[ "logfile" ] = $logfd;
 		
 		error_log("Opened and locked $logfile => " . $GLOBALS[ "logfile" ]);
 
