@@ -75,7 +75,7 @@ Kappa.StatusEvent = function(status)
 		remoteipdiv.style.width = "24%";
 		remoteipdiv.style.display = "inline-block";
 		remoteipdiv.style.padding = "4px";
-		remoteipdiv.innerHTML = encoder.remoteip;
+		remoteipdiv.innerHTML = encoder.hostname + "@" + encoder.remoteip + "/" + encoder.uname;
 		
 		var jobnamediv = document.createElement('span');
 		jobnamediv.style.width = "24%";
