@@ -88,9 +88,14 @@ Kappa.StatusEvent = function(status)
 		percentdiv.style.display = "inline-block";
 		percentdiv.style.padding = "4px";
 		
-		if (encoder.progress)
+		if (encoder.jobname == "encode")
 		{
-			percentdiv.innerHTML = encoder.progress.percent;
+			if (encoder.progress)
+			{
+				percentdiv.innerHTML = encoder.progress.percent;
+				
+				jobnamediv.innerHTML += " => " + encoder.progress.docnum + "/" + encoder.progress.clname;
+			}
 		}
 		
 		encoderdiv.appendChild(instancediv);
