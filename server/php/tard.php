@@ -15,9 +15,9 @@ function get_tar_content($tarpath,$tarcont = null)
 	
 	$wantpcm = false;
 	
-	if (strtolower(substr($tarpath,-8)) == ".mxf.pcm")
+	if (($tarcont !== null) && strtolower(substr($tarcont,-8)) == ".mxf.pcm")
 	{
-		$tarpath = substr($tarpath,0,-4);
+		$tarcont = substr($tarcont,0,-4);
 		$wantpcm = true;
 	}
 	
