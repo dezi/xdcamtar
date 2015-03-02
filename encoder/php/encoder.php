@@ -172,6 +172,8 @@ function JobEncode($fp,$job)
     		if (trim($line) === "") continue;
     		
     		WriteChunkedLine($fp,"stdout:" . trim($line) . "\n");
+
+    		Putpro($job,trim($line));
     		
     		continue;
         }
@@ -183,6 +185,8 @@ function JobEncode($fp,$job)
     		if (trim($line) === "") continue;
      		
      		WriteChunkedLine($fp,"stderr:" . trim($line) . "\n");
+    		
+    		Putpro($job,trim($line));
     		
     		continue;
 		}
@@ -338,6 +342,69 @@ function Getjob()
 	if (isset($job[ "encode" ])) JobEncode($fp,$job);
    
     WriteChunkedLine($fp,"Done job processing.\n");
+    
+    //
+    // Final dummy chunk and close.
+    //
+    
+    WriteChunkedLine($fp,"");
+    
+    fclose($fp);
+}
+
+//
+// Put encoding progress.
+//
+
+function Putpro($job,$line)
+{
+	//
+	// Parse line for suitable output.
+	//
+	
+	$doneencode   = strpos($line,"<Done-Encode>");
+	$donetransfer = strpos($line,"<Done-Transfer>");
+	
+	if (($doneencode === false) && ($donetransfer == false)) return;
+	
+	//
+	// Prepare JSON data.
+	//
+	
+	//
+	// Open socket stream for transfer.
+	//
+	
+	$self    = $GLOBALS[ "hostname" ];
+	$uname   = $GLOBALS[ "uname"    ];
+	$encoder = $GLOBALS[ "encoder"  ];
+
+	$host = $GLOBALS[ "acthost" ];
+	$port = $GLOBALS[ "actport" ];
+		
+	$fp = @fsockopen($host,$port,$errno,$errstr,2);
+	
+	if (! $fp) 
+	{
+		Logdat("No server available.\n");
+		
+		return;
+	}
+	
+	Logdat("Connected to $host:$port.\n");
+		
+	fwrite($fp,"GET /putpro HTTP/1.1\r\n");
+    fwrite($fp,"Host: $host\r\n");
+    fwrite($fp,"XDC-Host: $self\r\n");
+    fwrite($fp,"XDC-Uname: $uname\r\n");
+    fwrite($fp,"XDC-Encoder: $encoder\r\n");
+    fwrite($fp,"Transfer-Encoding: chunked\r\n");
+    fwrite($fp,"\r\n");
+    fflush($fp);
+    
+    stream_set_timeout($fp,5);
+        
+    WriteChunkedLine($fp,"Hallo...\n");
     
     //
     // Final dummy chunk and close.
