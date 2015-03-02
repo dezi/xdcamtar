@@ -14,7 +14,7 @@
 		"--useguids",    "false",
 		"--deinterlace", "yes",
 		"--aspectratio", "16:9",
-		"--temp",        "../tmp",
+		"--temp",        "./../tmp",
 
 		"--profile", 	 "profile.XDCAM-Preview.json",
 		
