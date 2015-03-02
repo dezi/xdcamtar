@@ -12,6 +12,7 @@ $GLOBALS[ "vserver"  ] = "1.0.0.1000";
 //
 
 include("./json.php");
+include("./smem.php");
 include("./tard.php");
 
 //
@@ -33,6 +34,10 @@ function ProcessRequest()
 
 	$job = GetJob();
 
+	//
+	// Transmitt job to encoder.
+	//
+	
 	echo json_encdat($job);
 
 	echo "\n---\n";
@@ -49,6 +54,23 @@ function ProcessRequest()
 
 	ob_end_flush();
 	flush();
+
+	//
+	// Register job.
+	//
+	
+	$status = smem_getmem();
+
+	$job[ "uname"     ] = $_SERVER[ "HTTP_XDC_UNAME"    ];
+	$job[ "encoder"   ] = $_SERVER[ "HTTP_XDC_ENCODER"  ];
+	$job[ "hostname"  ] = $_SERVER[ "HTTP_XDC_HOSTNAME" ];
+	$job[ "instance"  ] = $_SERVER[ "HTTP_XDC_INSTANCE" ];
+	$job[ "remoteip"  ] = $_SERVER[ "REMOTE_ADDR" 	   ];
+	$job[ "timestamp" ] = time();
+ 
+	$status[ "encoders" ][ $job[ "instance" ] ] = $job;
+	
+	smem_putmem($status);
 
 	//
 	// Listen for progress and result.
@@ -90,7 +112,7 @@ function ProcessRequest()
 
 function GetJob()
 {
-	error_log($_SERVER[ "HTTP_XDC_ENCODER" ]);
+	error_log($_SERVER[ "HTTP_XDC_ENCODER"  ] . "/" . $_SERVER[ "HTTP_XDC_INSTANCE" ]);
 	
 	if (($job = JobUpdateSoftware()) !== null) return $job;
 	
@@ -183,6 +205,7 @@ function JobXDCAMEncode()
 		$path = pathinfo($name,PATHINFO_DIRNAME);
 
 		$docnum = explode("/",$name);
+		$clname = array_pop($docnum);
 		$docnum = $docnum[ 0 ];
 
 		error_log("candidate: $docnum => $name => $size");
@@ -223,14 +246,21 @@ function JobXDCAMEncode()
 		
 		error_log("Opened and locked $logfile => " . $GLOBALS[ "logfile" ]);
 
+		$job[ "jobname" ] = "encode";
+		
+		$job[ "encode" ][ "docnum" ] = "$docnum";
+		$job[ "encode" ][ "clname" ] = "$clname";
+		$job[ "encode" ][ "input"  ] = "/tarman/xdcam/tarballs/$docnum.tar/$name";
+		$job[ "encode" ][ "output" ] = "/output/xdcam/previews/$path";
+
 		$job[ "encode" ][ "options" ][ "--config"      ] = "config.dezi-osx.json";
 		$job[ "encode" ][ "options" ][ "--profile"     ] = "profile.XDCAM-Preview.json";
 		$job[ "encode" ][ "options" ][ "--logprocess"  ] = "true";
 		$job[ "encode" ][ "options" ][ "--logprogres"  ] = "true";
 		$job[ "encode" ][ "options" ][ "--usehttpd"    ] = "true";
 
-		$job[ "encode" ][ "options" ][ "--inputvideo"  ] = "/tarman/xdcam/tarballs/$docnum.tar/$name";
-		$job[ "encode" ][ "options" ][ "--outputdir"   ] = "/output/xdcam/previews/$path";
+		$job[ "encode" ][ "options" ][ "--inputvideo"  ] = $job[ "encode" ][ "input"  ];
+		$job[ "encode" ][ "options" ][ "--outputdir"   ] = $job[ "encode" ][ "output" ];
 		
 		break;
 	}
@@ -271,7 +301,8 @@ function JobUpdateSoftware()
 			
 			if (is_dir("$encoderdir/$subdir/$file")) continue;
 			
-			$job[ "update" ][ "files" ][] = "$subdir/$file";
+			$job[ "jobname" ] = "update";
+			$job[ "update"  ][ "files" ][] = "$subdir/$file";
 		}
 		
 		closedir($dfd);
@@ -286,7 +317,8 @@ function JobUpdateSoftware()
 
 function JobIdle()
 {
-	$job[ "idle" ] = array();
+	$job[ "jobname" ] = "idle";
+	$job[ "idle"    ] = array();
 	
 	return $job;
 }

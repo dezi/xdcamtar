@@ -1,6 +1,7 @@
 <?php
 
 include("./json.php");
+include("./smem.php");
 
 function xdcam_uploads_get_status_complete(&$status,$index)
 {
@@ -349,15 +350,10 @@ ob_end_clean();
 ob_start();
 
 //
-// Read status from shared memory segment.
+// Get shared memory locked.
 //
 
-$shmid   = shmop_open(123456,"c",0644,64 * 1024);
-$shmsize = shmop_size($shmid);
-
-$status = json_decdat(shmop_read($shmid,0,$shmsize));
-
-if ($status === null) $status = array();
+$status = smem_getmem();
 
 //
 // Update all statuses.
@@ -370,8 +366,7 @@ xdcam_tarballs_get_status($status);
 // Write back updated status to shared memory.
 //
 
-shmop_write($shmid,str_pad(json_encdat($status),$shmsize),0);
-shmop_close($shmid);
+smem_putmem($status);
 
 //
 // Prepare response for browser.

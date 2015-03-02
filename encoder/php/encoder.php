@@ -7,6 +7,21 @@ $GLOBALS[ "servers"  ][] = "dezimac.local:80";
 
 $GLOBALS[ "uname"    ] = trim(`uname`);
 $GLOBALS[ "hostname" ] = trim(`hostname`);
+$GLOBALS[ "instance" ] = CreateGuid();
+
+function CreateGuid()
+{
+	return sprintf('%04x%04x-%04x-%04x-%04x-%04x%04x%04x', 
+		mt_rand(0,65535), 
+		mt_rand(0,65535), 
+		mt_rand(0,65535), 
+		mt_rand(16384,20479), 
+		mt_rand(32768,49151), 
+		mt_rand(0,65535), 
+		mt_rand(0,65535), 
+		mt_rand(0,65535)
+		);    
+}
 
 function Logflush()
 {
@@ -62,7 +77,7 @@ function Logdat($message)
 // Write chunked line to server with log.
 //
 
-function WriteChunkedLine($fp,$line)
+function WriteChunkedLine($fp,$line,$log = true)
 {
 	$hlen = dechex(strlen($line));
 
@@ -71,7 +86,7 @@ function WriteChunkedLine($fp,$line)
     fwrite($fp,"\r\n");
     fflush($fp);
     	
-	Logdat($line);
+	if ($log && strlen($line)) Logdat($line);
 }
 
 //
@@ -267,9 +282,10 @@ function JobUpdate($fp,$job)
 
 function Getjob()
 {
-	$self    = $GLOBALS[ "hostname" ];
-	$uname   = $GLOBALS[ "uname"    ];
-	$encoder = $GLOBALS[ "encoder"  ];
+	$uname    = $GLOBALS[ "uname"    ];
+	$encoder  = $GLOBALS[ "encoder"  ];
+	$hostname = $GLOBALS[ "hostname" ];
+	$instance = $GLOBALS[ "instance" ];
 	
 	foreach ($GLOBALS[ "servers" ] as $host)
 	{ 	
@@ -299,9 +315,10 @@ function Getjob()
 		
 	fwrite($fp,"GET /getjob HTTP/1.1\r\n");
     fwrite($fp,"Host: $host\r\n");
-    fwrite($fp,"XDC-Host: $self\r\n");
     fwrite($fp,"XDC-Uname: $uname\r\n");
     fwrite($fp,"XDC-Encoder: $encoder\r\n");
+    fwrite($fp,"XDC-Hostname: $hostname\r\n");
+    fwrite($fp,"XDC-Instance: $instance\r\n");
     fwrite($fp,"Transfer-Encoding: chunked\r\n");
     fwrite($fp,"\r\n");
     fflush($fp);
@@ -365,19 +382,30 @@ function Putpro($job,$line)
 	$doneencode   = strpos($line,"<Done-Encode>");
 	$donetransfer = strpos($line,"<Done-Transfer>");
 	
-	if (($doneencode === false) && ($donetransfer == false)) return;
+	if (($doneencode === false) && ($donetransfer === false)) return;
+	
+	$percent = explode(" => ",trim($line));
+	$percent = intval(substr($percent[ 1 ],0,-1));
 	
 	//
 	// Prepare JSON data.
 	//
 	
+	$json[ "percent" ] = $percent;
+	$json[ "input"   ] = $job[ "encode" ][ "input"  ];
+	$json[ "docnum"  ] = $job[ "encode" ][ "docnum" ];
+	$json[ "clname"  ] = $job[ "encode" ][ "clname" ];
+	 
+	$json = json_encode($json,64 | 256);
+	
 	//
 	// Open socket stream for transfer.
 	//
 	
-	$self    = $GLOBALS[ "hostname" ];
-	$uname   = $GLOBALS[ "uname"    ];
-	$encoder = $GLOBALS[ "encoder"  ];
+	$uname    = $GLOBALS[ "uname"    ];
+	$encoder  = $GLOBALS[ "encoder"  ];
+	$hostname = $GLOBALS[ "hostname" ];
+	$instance = $GLOBALS[ "instance" ];
 
 	$host = $GLOBALS[ "acthost" ];
 	$port = $GLOBALS[ "actport" ];
@@ -391,20 +419,19 @@ function Putpro($job,$line)
 		return;
 	}
 	
-	Logdat("Connected to $host:$port.\n");
-		
 	fwrite($fp,"GET /putpro HTTP/1.1\r\n");
     fwrite($fp,"Host: $host\r\n");
-    fwrite($fp,"XDC-Host: $self\r\n");
     fwrite($fp,"XDC-Uname: $uname\r\n");
     fwrite($fp,"XDC-Encoder: $encoder\r\n");
+    fwrite($fp,"XDC-Hostname: $hostname\r\n");
+    fwrite($fp,"XDC-Instance: $instance\r\n");
     fwrite($fp,"Transfer-Encoding: chunked\r\n");
     fwrite($fp,"\r\n");
     fflush($fp);
     
     stream_set_timeout($fp,5);
         
-    WriteChunkedLine($fp,"Hallo...\n");
+    WriteChunkedLine($fp,$json,false);
     
     //
     // Final dummy chunk and close.

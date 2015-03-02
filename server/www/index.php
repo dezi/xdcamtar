@@ -8,6 +8,8 @@ Kappa = new Object();
 
 Kappa.StatusEvent = function(status)
 {	
+	//console.log(status);
+	
 	var stampspan = document.getElementById("stamp");
 	var now = new Date();
 	stampspan.innerHTML = now.toLocaleString();
@@ -49,6 +51,56 @@ Kappa.StatusEvent = function(status)
 		uploadsdiv.appendChild(uploaddiv);
 	}
 	
+	var encodersdiv = document.getElementById("encoders");
+	
+	encodersdiv.innerHTML = "";
+	
+	for (var encoderinx in status.encoders)
+	{
+		var encoder = status.encoders[ encoderinx ];
+
+		//console.log(encoder.instance);
+		
+		var encoderdiv = document.createElement('div');
+		encoderdiv.style.padding = "8px";
+		
+		var instancediv = document.createElement('span');
+		
+		instancediv.style.width = "24%";
+		instancediv.style.display = "inline-block";
+		instancediv.style.padding = "4px";
+		instancediv.innerHTML = encoder.instance;
+		
+		var remoteipdiv = document.createElement('span');
+		remoteipdiv.style.width = "24%";
+		remoteipdiv.style.display = "inline-block";
+		remoteipdiv.style.padding = "4px";
+		remoteipdiv.innerHTML = encoder.remoteip;
+		
+		var jobnamediv = document.createElement('span');
+		jobnamediv.style.width = "24%";
+		jobnamediv.style.display = "inline-block";
+		jobnamediv.style.padding = "4px";
+		jobnamediv.innerHTML = encoder.jobname;
+		
+		var percentdiv = document.createElement('span');
+		percentdiv.style.width = "24%";
+		percentdiv.style.display = "inline-block";
+		percentdiv.style.padding = "4px";
+		
+		if (encoder.progress)
+		{
+			percentdiv.innerHTML = encoder.progress.percent;
+		}
+		
+		encoderdiv.appendChild(instancediv);
+		encoderdiv.appendChild(remoteipdiv);
+		encoderdiv.appendChild(jobnamediv);
+		encoderdiv.appendChild(percentdiv);
+		
+		encodersdiv.appendChild(encoderdiv);
+	}
+	
 	window.setTimeout('Kappa.StatusCaller()',1000);
 }
 
@@ -72,8 +124,13 @@ Kappa.StatusCaller = function()
 <body>
 <h4><center id="stamp"></center></h4>
 <h3><center>XDCAM-Processing-Status</center></h3>
+<hr/>
 <div id="uploads"></div>
+<hr/>
+<div id="encoders"></div>
+<hr/>
 <?php
+	/*
 	include("../php/json.php");
 
 	$shmid   = shmop_open(123456,"c",0644,64 * 1024);
@@ -81,10 +138,9 @@ Kappa.StatusCaller = function()
 
 	$shm_status = json_decdat(shmop_read($shmid,0,shmop_size($shmid)));
 	
-	//var_dump($shm_status);
-	
 	shmop_delete($shmid);
 	shmop_close($shmid);
+	*/
 ?>
 <script>
 Kappa.StatusCaller();
