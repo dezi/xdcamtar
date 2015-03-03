@@ -94,7 +94,7 @@ Kappa.StatusEvent = function(status)
 			{
 				percentdiv.innerHTML = encoder.progress.percent;
 				
-				jobnamediv.innerHTML += " => " + encoder.progress.docnum + "/" + encoder.progress.clname;
+				jobnamediv.innerHTML = "encoding => " + encoder.progress.docnum + "/" + encoder.progress.clname;
 			}
 		}
 		

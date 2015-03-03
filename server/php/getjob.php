@@ -190,7 +190,7 @@ function JobXDCAMEncode()
 				continue;
 			}
 			
-			$xmloutpath = "../out/xdcam/previews/" . substr($name,0,-4) . ".xml";
+			$xmloutpath = "../tmp/xdcam/previews/" . substr($name,0,-4) . ".xml";
 			
 			if (file_exists($xmloutpath)) continue;
 			
@@ -214,7 +214,7 @@ function JobXDCAMEncode()
 		// Try to open and lock logfile.
 		//
 		
-		$logfile = "../out/xdcam/previews/" . substr($name,0,-4) . ".log";
+		$logfile = "../tmp/xdcam/previews/" . substr($name,0,-4) . ".log";
 		$logdir  = pathinfo($logfile,PATHINFO_DIRNAME);
 	
 		if (! file_exists($logdir)) 

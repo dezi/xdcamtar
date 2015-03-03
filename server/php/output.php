@@ -5,7 +5,7 @@ header("Content-type: text/plain; charset=utf-8");
 $output = $_SERVER[ "SCRIPT_NAME" ];
 if (substr($output,0,8) != "/output/") exit();
 
-$output = "../out" . substr($output,7);
+$output = "../tmp" . substr($output,7);
 $outdir = pathinfo($output,PATHINFO_DIRNAME);
 
 //
