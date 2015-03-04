@@ -1,6 +1,7 @@
 <!doctype html>
 <html>
 <head>
+<meta charset="utf-8" />
 <title>XDCAM-Processing-Status</title>
 <script>
 
@@ -8,103 +9,64 @@ Kappa = new Object();
 
 Kappa.StatusEvent = function(status)
 {	
+	var inner;
 	//console.log(status);
 	
 	var stampspan = document.getElementById("stamp");
 	var now = new Date();
 	stampspan.innerHTML = now.toLocaleString();
 	
-	var uploadsdiv = document.getElementById("uploads");
+	var uploadstbody = document.getElementById("uploads");
 	
-	uploadsdiv.innerHTML = "";
+	inner = "";
 	
 	for (var uploadinx in status.uploads)
 	{
 		var upload = status.uploads[ uploadinx ];
-
-		var uploaddiv = document.createElement('div');
-		uploaddiv.style.padding = "8px";
 		
-		var entrydiv = document.createElement('span');
-		
-		entrydiv.style.width = "30%";
-		entrydiv.style.display = "inline-block";
-		entrydiv.style.padding = "4px";
-		entrydiv.innerHTML = upload.entry;
-		
-		var kbsizediv = document.createElement('span');
-		kbsizediv.style.width = "30%";
-		kbsizediv.style.display = "inline-block";
-		kbsizediv.style.padding = "4px";
-		kbsizediv.innerHTML = upload.kbsize;
-		
-		var statusdiv = document.createElement('span');
-		statusdiv.style.width = "30%";
-		statusdiv.style.display = "inline-block";
-		statusdiv.style.padding = "4px";
-		statusdiv.innerHTML = upload.status;
-		
-		uploaddiv.appendChild(entrydiv);
-		uploaddiv.appendChild(kbsizediv);
-		uploaddiv.appendChild(statusdiv);
-		
-		uploadsdiv.appendChild(uploaddiv);
+		inner += '<tr>';
+		inner += '<td>' + upload.entry  +    '</td>';
+		inner += '<td>' + upload.path   +    '</td>';
+		inner += '<td>' + upload.kbsize + ' kb</td>';
+		inner += '<td>' + upload.status +    '</td>';
+		inner += '</tr>';
 	}
 	
-	var encodersdiv = document.getElementById("encoders");
+	uploadstbody.innerHTML = inner;
 	
-	encodersdiv.innerHTML = "";
+	var encoderstbody = document.getElementById("encoders");
+	
+	inner = "";
 	
 	for (var encoderinx in status.encoders)
 	{
 		var encoder = status.encoders[ encoderinx ];
-
-		//console.log(encoder.instance);
 		
-		var encoderdiv = document.createElement('div');
-		encoderdiv.style.padding = "8px";
-		
-		var instancediv = document.createElement('span');
-		
-		instancediv.style.width = "24%";
-		instancediv.style.display = "inline-block";
-		instancediv.style.padding = "4px";
-		instancediv.innerHTML = encoder.instance;
-		
-		var remoteipdiv = document.createElement('span');
-		remoteipdiv.style.width = "24%";
-		remoteipdiv.style.display = "inline-block";
-		remoteipdiv.style.padding = "4px";
-		remoteipdiv.innerHTML = encoder.hostname + "@" + encoder.remoteip + "/" + encoder.uname;
-		
-		var jobnamediv = document.createElement('span');
-		jobnamediv.style.width = "24%";
-		jobnamediv.style.display = "inline-block";
-		jobnamediv.style.padding = "4px";
-		jobnamediv.innerHTML = encoder.jobname;
-		
-		var percentdiv = document.createElement('span');
-		percentdiv.style.width = "24%";
-		percentdiv.style.display = "inline-block";
-		percentdiv.style.padding = "4px";
+		inner += '<tr>';
+		inner += '<td>' + encoder.hostname + "@" + encoder.remoteip + "/" + encoder.uname   +    '</td>';
+		inner += '<td>' + encoder.instance  +    '</td>';
 		
 		if (encoder.jobname == "encode")
 		{
 			if (encoder.progress)
+			{				
+				inner += '<td>' + "encoding => " + encoder.progress.docnum + "/" + encoder.progress.clname + '</td>';
+				inner += '<td>' + encoder.progress.percent + '%</td>';
+			}
+			else
 			{
-				percentdiv.innerHTML = encoder.progress.percent;
-				
-				jobnamediv.innerHTML = "encoding => " + encoder.progress.docnum + "/" + encoder.progress.clname;
+				inner += '<td>' + "encoding" + '</td>';
 			}
 		}
+		else
+		{
+			inner += '<td>' + encoder.jobname + '</td>';
+		}
 		
-		encoderdiv.appendChild(instancediv);
-		encoderdiv.appendChild(remoteipdiv);
-		encoderdiv.appendChild(jobnamediv);
-		encoderdiv.appendChild(percentdiv);
-		
-		encodersdiv.appendChild(encoderdiv);
+		inner += '</tr>';
 	}
+	
+	encoderstbody.innerHTML = inner;
 	
 	window.setTimeout('Kappa.StatusCaller()',1000);
 }
@@ -129,11 +91,34 @@ Kappa.StatusCaller = function()
 <body>
 <h4><center id="stamp"></center></h4>
 <h3><center>XDCAM-Processing-Status</center></h3>
-<hr/>
-<div id="uploads"></div>
-<hr/>
-<div id="encoders"></div>
-<hr/>
+
+<center style="margin:8px">
+	<table width="1000" border="0" cellpadding="8" style="background-color:#cccccc">
+		<thead>
+			<th>Doknr<hr/></th>
+			<th>Path<hr/></th>
+			<th>Größe<hr/></th>
+			<th>Status<hr/></th>
+			<th>Fertig<hr/></th>
+		</thead>
+		<tbody id="uploads">
+		</tbody>
+	</table>
+</center>
+
+<center style="margin:8px">
+	<table width="1000" border="0" cellpadding="8" style="background-color:#cccccc">
+		<thead>
+			<th>Kennung<hr/></th>
+			<th>Instance<hr/></th>
+			<th>Job<hr/></th>
+			<th>Fertig<hr/></th>
+		</thead>
+		<tbody id="encoders">
+		</tbody>
+	</table>
+</center>
+
 <?php
 	/*
 	include("../php/json.php");

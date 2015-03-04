@@ -2,6 +2,7 @@
 
 include("./json.php");
 include("./smem.php");
+include("./tard.php");
 
 function xdcam_uploads_get_status_complete(&$status,$index)
 {
@@ -80,6 +81,101 @@ function xdcam_uploads_get_status_complete(&$status,$index)
 	$mystatus[ $index ][ "files" ] = $clipfiles;
 
 	return true;
+}
+
+function xdcam_previews_get_status(&$status)
+{
+	$oldpreviews = isset($status[ "previews" ]) ? $status[ "previews" ] : array();
+	$newpreviews = array();
+	
+	//
+	// Get a list of files just beeing encoded.
+	//
+	
+	$encoding = array();
+	
+	if (isset($status[ "encoders" ]))
+	{
+		foreach ($status[ "encoders" ] as $instance => $encoder)
+		{
+			if (! isset($encoder[ "progress" ])) continue;
+			if (! isset($encoder[ "progress" ][ "input"   ])) continue;
+			if (! isset($encoder[ "progress" ][ "percent" ])) continue;
+			
+			$input   = $encoder[ "progress" ][ "input"   ];
+			$percent = $encoder[ "progress" ][ "percent" ];
+			
+			$input = explode(".tar/",$input);
+			if (count($input) != 2) continue;
+			$input = $input[ 1 ];
+			
+			$encoding[ $input ] = $percent;
+		}
+	}
+	
+	//
+	// Process tarballs directory.
+	//
+	
+	$prv = "../tmp/xdcam/previews";
+	
+	$dir = "../tmp/xdcam/tarballs";
+	$dfd = opendir($dir);
+	
+	while (($entry = readdir($dfd)) !== false)
+	{	
+		if (substr($entry,-4) != ".tar") continue;
+		
+		if (isset($oldpreviews[ $entry ]))
+		{
+			$newpreviews[ $entry ] = $oldpreviews[ $entry ];
+			
+			foreach ($newpreviews[ $entry ] as $xmloutpath => $exists)
+			{
+				$name = explode("previews/",$xmloutpath);
+				$name = substr($name[ 1 ],0,-4) . ".MXF";
+				
+				$newpreviews[ $entry ][ $xmloutpath ] = file_exists($xmloutpath) ? "done" : "want";
+				
+				if (isset($encoding[ $name ])) $newpreviews[ $entry ][ $xmloutpath ] = $encoding[ $name ];
+			}
+		}
+		else
+		{
+			$newpreviews[ $entry ] = array();
+			
+			$tarball = "$dir/$entry";
+			$tarcont = get_tar_content($tarball);
+		
+			foreach ($tarcont as $tarfile)
+			{
+				$name = $tarfile[ "name" ];
+				$size = $tarfile[ "size" ];
+			
+				if (substr($name,-7) != "V01.MXF") continue;
+			
+				if ($size < 200000000) 
+				{
+					//
+					// Technical filler clip is skipped.
+					//
+				
+					continue;
+				}
+			
+				$xmloutpath = dirname(getcwd()) . "/tmp/xdcam/previews/" . substr($name,0,-4) . ".xml";
+				
+				$newpreviews[ $entry ][ $xmloutpath ] = file_exists($xmloutpath) ? "done" : "want";
+				
+				if (isset($encoding[ $name ])) $newpreviews[ $entry ][ $xmloutpath ] = $encoding[ $name ];
+			}
+		}
+
+	}
+	
+	closedir($dfd);
+		
+	$status[ "previews" ] = &$newpreviews;
 }
 
 function xdcam_uploads_get_status(&$status)
@@ -179,7 +275,9 @@ function xdcam_uploads_get_status(&$status)
 				$mystatus[ $index ][ "status" ] = "uploading...";
 				$mystatus[ $index ][ "kbsize" ] = intval($dures);
 				$mystatus[ $index ][ "kbtime" ] = time();
-			}		
+			}
+			
+			$mystatus[ $index ][ "path"   ] = realpath(getcwd() . "/$dir/$entry");		
 		}
 	}
 	
@@ -229,6 +327,7 @@ function xdcam_tarballs_get_status(&$status)
 		}
 		
 		$mystatus[ $index ][ "status" ] = "tared";		
+		$mystatus[ $index ][ "path"   ] = realpath(getcwd() . "/$dir/$entry");		
 	}
 	
 	closedir($dfd);
@@ -361,6 +460,7 @@ $status = smem_getmem();
 
 xdcam_uploads_get_status ($status);
 xdcam_tarballs_get_status($status);
+xdcam_previews_get_status($status);
 
 //
 // Write back updated status to shared memory.
