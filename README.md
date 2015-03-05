@@ -40,3 +40,9 @@ The following config needs to be added to apache/httpd.conf, where "/Users/dezi"
     
     </IfModule>
 
+Enable shared memory and semphores in php on CentOS
+---------------------------------------------------
+
+sudo yum install php-process
+
+sudo /etc/init.d/httpd restart
