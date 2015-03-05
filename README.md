@@ -39,3 +39,4 @@ The following config needs to be added to apache/httpd.conf, where "/Users/dezi"
         AliasMatch ^/(update) "/Users/dezi/xdcamtar/server/php/$1.php"
     
     </IfModule>
+
