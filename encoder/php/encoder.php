@@ -1,6 +1,6 @@
 <?php
 
-$GLOBALS[ "encoder"  ] = "1.0.0.1002";
+$GLOBALS[ "encoder"  ] = "1.0.0.1003";
 
 $GLOBALS[ "servers"  ][] = "PC15930.spiegel.de:8880";
 $GLOBALS[ "servers"  ][] = "192.168.55.244:8880";
