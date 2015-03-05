@@ -44,4 +44,5 @@ Enable shared memory and semphores in php on CentOS
 ---------------------------------------------------
 
 sudo yum install php-process
+
 sudo /etc/init.d/httpd restart
