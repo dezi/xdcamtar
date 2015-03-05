@@ -30,11 +30,14 @@ Kappa.StatusEvent = function(status)
 		inner += '<td>' + upload.kbsize + ' kb</td>';
 		inner += '<td>' + upload.status +    '</td>';
 		
-		if ((upload.status == "taring...") && (upload.tarsize > 0))
+		if ((upload.status == "taring...") && (upload.percent > 0))
 		{
-			var percent = Math.round((upload.tarsize / upload.kbsize) * 100);
-			
-			inner += '<td>' + percent + ' %</td>';
+			inner += '<td>' + upload.percent + ' %</td>';
+		}
+		
+		if ((upload.status == "encoding...") && (upload.percent > 0))
+		{
+			inner += '<td>' + upload.percent + ' %</td>';
 		}
 		
 		inner += '</tr>';
@@ -51,7 +54,7 @@ Kappa.StatusEvent = function(status)
 		var encoder = status.encoders[ encoderinx ];
 		
 		inner += '<tr>';
-		inner += '<td>' + encoder.hostname + " @ " + encoder.remoteip + " - " + encoder.uname + " = " + encoder.encoder + '</td>';
+		inner += '<td>'  + encoder.encoder + " = " + encoder.remoteip + " - " + encoder.uname + " @ " + encoder.hostname +  '</td>';
 		inner += '<td>' + encoder.instance  +    '</td>';
 		
 		if (encoder.jobname == "encode")
@@ -103,11 +106,11 @@ Kappa.StatusCaller = function()
 <center style="margin:8px">
 	<table width="1000" border="0" cellpadding="8" style="background-color:#cccccc">
 		<thead>
-			<th width="5%">Doknr<hr/></th>
+			<th width="5%" >Doknr<hr/></th>
 			<th width="50%">Path<hr/></th>
-			<th width="15%">Größe<hr/></th>
-			<th width="22%">Status<hr/></th>
-			<th width="8%" >Fertig<hr/></th>
+			<th width="12%">Größe<hr/></th>
+			<th width="25%">Status<hr/></th>
+			<th width="5%" >Fertig<hr/></th>
 		</thead>
 		<tbody id="uploads">
 		</tbody>
@@ -118,9 +121,9 @@ Kappa.StatusCaller = function()
 	<table width="1000" border="0" cellpadding="8" style="background-color:#cccccc;white-space:nowrap">
 		<thead>
 			<th width="40%">Kennung<hr/></th>
-			<th width="30%">Instance<hr/></th>
-			<th width="22%">Status<hr/></th>
-			<th width="8%" >Fertig<hr/></th>
+			<th width="27%">Instance<hr/></th>
+			<th width="25%">Status<hr/></th>
+			<th width="5%" >Fertig<hr/></th>
 		</thead>
 		<tbody id="encoders">
 		</tbody>

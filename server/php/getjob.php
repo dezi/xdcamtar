@@ -4,7 +4,7 @@
 // Version definitions.
 //
 
-$GLOBALS[ "encoder"  ] = "1.0.0.1003";
+$GLOBALS[ "encoder"  ] = "1.0.0.1004";
 $GLOBALS[ "vserver"  ] = "1.0.0.1000";
 
 //
@@ -113,8 +113,16 @@ function ProcessRequest()
 	
 	$status = smem_getmem();
 
-	$job[ "jobname" ] = "idle";
- 
+	if ($job[ "jobname" ] == "update")
+	{
+		$job[ "jobname" ] = "updated+restarted";
+	}
+	else
+	{
+		$job[ "jobname"   ] = "idle";
+		$job[ "timestamp" ] = time();
+	}
+	
 	$status[ "encoders" ][ $job[ "instance" ] ] = $job;
 	
 	smem_putmem($status);

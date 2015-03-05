@@ -159,23 +159,62 @@ function xdcam_previews_get_status(&$status)
 	{	
 		if (substr($entry,-4) != ".tar") continue;
 		
+		$tarname = substr($entry,0,-4);
+		
+		$totalsize = 0;
+		$totaldone = 0;
+		
 		if (isset($oldpreviews[ $entry ]))
 		{
 			$newpreviews[ $entry ] = $oldpreviews[ $entry ];
 			
-			foreach ($newpreviews[ $entry ] as $xmloutpath => $exists)
+			foreach ($newpreviews[ $entry ][ "videos" ] as $index => $video)
 			{
-				$name = explode("previews/",$xmloutpath);
+				$name = explode("previews/",$video[ "path" ]);
 				$name = substr($name[ 1 ],0,-4) . ".MXF";
+				$size = $video[ "size" ];
 				
-				$newpreviews[ $entry ][ $xmloutpath ] = file_exists($xmloutpath) ? "done" : "want";
+				$totalsize += round($size / 10);
 				
-				if (isset($encoding[ $name ])) $newpreviews[ $entry ][ $xmloutpath ] = $encoding[ $name ];
+				if (isset($encoding[ $name ]))
+				{
+					//
+					// Video beeing encoded.
+					//
+					
+					$newpreviews[ $entry ][ "videos" ][ $index ][ "mode" ] = $encoding[ $name ];
+					
+					$totaldone += round(($video[ "size" ] / 10) * $encoding[ $name ] / 100);
+				}
+				else
+				{
+					if (file_exists($video[ "path" ]))
+					{
+						//
+						// Video already encoded.
+						//
+						
+						$newpreviews[ $entry ][ "videos" ][ $index ][ "mode" ] = "done";
+						
+						$totaldone += round($video[ "size" ] / 10);
+					}
+					else
+					{
+						//
+						// Video to be done.
+						//
+						
+						$newpreviews[ $entry ][ "videos" ][ $index ][ "mode" ] = "want";
+						
+						$totaldone += 0;
+					}
+				}
 			}
 		}
 		else
 		{
 			$newpreviews[ $entry ] = array();
+			$newpreviews[ $entry ][ "videos" ] = array();
 			
 			$tarball = "$dir/$entry";
 			$tarcont = get_tar_content($tarball);
@@ -184,6 +223,8 @@ function xdcam_previews_get_status(&$status)
 			{
 				$name = $tarfile[ "name" ];
 				$size = $tarfile[ "size" ];
+				
+				$totalsize += round($size / 10);
 			
 				if (substr($name,-7) != "V01.MXF") continue;
 			
@@ -198,12 +239,76 @@ function xdcam_previews_get_status(&$status)
 			
 				$xmloutpath = dirname(getcwd()) . "/tmp/xdcam/previews/" . substr($name,0,-4) . ".xml";
 				
-				$newpreviews[ $entry ][ $xmloutpath ] = file_exists($xmloutpath) ? "done" : "want";
+				$video = array();
+				$video[ "path" ] = $xmloutpath;
+				$video[ "size" ] = $size;
 				
-				if (isset($encoding[ $name ])) $newpreviews[ $entry ][ $xmloutpath ] = $encoding[ $name ];
+				if (isset($encoding[ $name ]))
+				{
+					//
+					// Video beeing encoded.
+					//
+					
+					$video[ "mode" ] = $encoding[ $name ];
+					
+					$totaldone += round(($video[ "size" ] / 10) * $encoding[ $name ] / 100);
+				}
+				else
+				{
+					if (file_exists($xmloutpath))
+					{
+						//
+						// Video already encoded.
+						//
+						
+						$video[ "mode" ] = "done";
+						
+						$totaldone += round($video[ "size" ] / 10);
+					}
+					else
+					{
+						//
+						// Video to be done.
+						//
+						
+						$video[ "mode" ] = "want";
+						
+						$totaldone += 0;
+					}
+				}
+				
+				$newpreviews[ $entry ][ "videos" ][] = $video;
 			}
 		}
 
+		//
+		// Integrate total encoded value into uploads status.
+		//
+		
+		foreach ($status[ "uploads" ] as $index => $upload)
+		{
+			if ($upload[ "entry" ] != $tarname) continue;
+			
+			error_log("$tarname =>>>>>>>>>> $totaldone == $totalsize");
+			
+			if ($totaldone == $totalsize)
+			{
+				$status[ "uploads" ][ $index ][ "status" ] = "encoded";
+				
+				if (isset($status[ "uploads" ][ $index ][ "percent" ]))
+				{
+					unset($status[ "uploads" ][ $index ][ "percent" ]);
+				}
+			}
+			else
+			{
+				$status[ "uploads" ][ $index ][ "status" ] = "encoding...";
+				
+				$percent = round($totaldone / $totalsize * 100);
+				
+				$status[ "uploads" ][ $index ][ "percent" ] = $percent;
+			}
+		}
 	}
 	
 	closedir($dfd);
@@ -287,6 +392,7 @@ function xdcam_uploads_get_status(&$status)
 						{
 							$mystatus[ $index ][ "status"  ] = "taring...";
 							$mystatus[ $index ][ "tarsize" ] = filesize($tarball . ".tmp") / 1024;
+							$mystatus[ $index ][ "percent" ] = round($mystatus[ $index ][ "tarsize" ] / $mystatus[ $index ][ "kbsize" ] * 100);
 						}
 						
 						if (file_exists($tarball . ".bad"))
@@ -496,6 +602,7 @@ xdcam_uploads_get_status ($status);
 xdcam_tarballs_get_status($status);
 xdcam_previews_get_status($status);
 xdcam_expire_encoders    ($status);
+
 //
 // Write back updated status to shared memory.
 //
