@@ -1,6 +1,6 @@
 <?php
 
-$GLOBALS[ "encoder"  ] = "1.0.0.1001";
+$GLOBALS[ "encoder"  ] = "1.0.0.1002";
 
 $GLOBALS[ "servers"  ][] = "PC15930.spiegel.de:8880";
 $GLOBALS[ "servers"  ][] = "192.168.55.244:8880";
@@ -98,7 +98,7 @@ function JobIdle($fp,$job)
 {
     WriteChunkedLine($fp,"Nothing to do.\n");
     	
-    usleep(1000000);
+    sleep(10);
 
     return true;
 }

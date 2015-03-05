@@ -51,7 +51,7 @@ Kappa.StatusEvent = function(status)
 		var encoder = status.encoders[ encoderinx ];
 		
 		inner += '<tr>';
-		inner += '<td>' + encoder.hostname + "@" + encoder.remoteip + "/" + encoder.uname   +    '</td>';
+		inner += '<td>' + encoder.hostname + " @ " + encoder.remoteip + " - " + encoder.uname + " = " + encoder.encoder + '</td>';
 		inner += '<td>' + encoder.instance  +    '</td>';
 		
 		if (encoder.jobname == "encode")
@@ -103,11 +103,11 @@ Kappa.StatusCaller = function()
 <center style="margin:8px">
 	<table width="1000" border="0" cellpadding="8" style="background-color:#cccccc">
 		<thead>
-			<th>Doknr<hr/></th>
-			<th>Path<hr/></th>
-			<th>Größe<hr/></th>
-			<th>Status<hr/></th>
-			<th>Fertig<hr/></th>
+			<th width="5%">Doknr<hr/></th>
+			<th width="50%">Path<hr/></th>
+			<th width="15%">Größe<hr/></th>
+			<th width="22%">Status<hr/></th>
+			<th width="8%" >Fertig<hr/></th>
 		</thead>
 		<tbody id="uploads">
 		</tbody>
@@ -115,12 +115,12 @@ Kappa.StatusCaller = function()
 </center>
 
 <center style="margin:8px">
-	<table width="1000" border="0" cellpadding="8" style="background-color:#cccccc">
+	<table width="1000" border="0" cellpadding="8" style="background-color:#cccccc;white-space:nowrap">
 		<thead>
-			<th>Kennung<hr/></th>
-			<th>Instance<hr/></th>
-			<th>Status<hr/></th>
-			<th>Fertig<hr/></th>
+			<th width="40%">Kennung<hr/></th>
+			<th width="30%">Instance<hr/></th>
+			<th width="22%">Status<hr/></th>
+			<th width="8%" >Fertig<hr/></th>
 		</thead>
 		<tbody id="encoders">
 		</tbody>

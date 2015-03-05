@@ -14,7 +14,7 @@
 			// Pass 1.
 			//
 			
-			phase : "pass-1",
+			phase : "onepass",
 			exec  : "exec.fifoman",
 			
 			params :

@@ -83,6 +83,39 @@ function xdcam_uploads_get_status_complete(&$status,$index)
 	return true;
 }
 
+function xdcam_expire_encoders(&$status)
+{
+	if (isset($status[ "encoders" ]))
+	{
+		foreach ($status[ "encoders" ] as $instance => $encoder)
+		{
+			if (isset($encoder[ "progress" ]))
+			{
+				if ((time() - $encoder[ "progress" ][ "acttime" ]) > 120)
+				{
+					unset($status[ "encoders" ][ $instance ]);
+				}
+				
+				continue;
+			}
+			
+			if (! isset($encoder[ "timestamp" ]))
+			{
+				unset($status[ "encoders" ][ $instance ]);
+				
+				continue;
+			}
+			
+			if ((time() - $encoder[ "timestamp" ]) > 120)
+			{
+				unset($status[ "encoders" ][ $instance ]);
+				
+				continue;
+			}
+		}
+	}
+}
+
 function xdcam_previews_get_status(&$status)
 {
 	$oldpreviews = isset($status[ "previews" ]) ? $status[ "previews" ] : array();
@@ -211,7 +244,7 @@ function xdcam_uploads_get_status(&$status)
 		// For debugging check if $entry is a link.
 		//
 		
-		if (readlink("$dir/$entry"))
+		if (@readlink("$dir/$entry"))
 		{
 			$ducmd = "du -sk $dir/" . readlink("$dir/$entry");
 		}
@@ -462,7 +495,7 @@ $status = smem_getmem();
 xdcam_uploads_get_status ($status);
 xdcam_tarballs_get_status($status);
 xdcam_previews_get_status($status);
-
+xdcam_expire_encoders    ($status);
 //
 // Write back updated status to shared memory.
 //

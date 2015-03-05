@@ -4,7 +4,7 @@
 // Version definitions.
 //
 
-$GLOBALS[ "encoder"  ] = "1.0.0.1001";
+$GLOBALS[ "encoder"  ] = "1.0.0.1002";
 $GLOBALS[ "vserver"  ] = "1.0.0.1000";
 
 //
@@ -94,6 +94,10 @@ function ProcessRequest()
 		}
 	}
 
+	//
+	// Cleanup job stuff.
+	//
+	
 	if ($ld !== false) 
 	{
 		flock($ld,LOCK_UN);
@@ -102,6 +106,18 @@ function ProcessRequest()
 	}
 	
 	fclose($pd);
+	
+	//
+	// Set job to idle again.
+	//
+	
+	$status = smem_getmem();
+
+	$job[ "jobname" ] = "idle";
+ 
+	$status[ "encoders" ][ $job[ "instance" ] ] = $job;
+	
+	smem_putmem($status);
 
 	error_log("Done $pd");
 }
@@ -318,7 +334,6 @@ function JobUpdateSoftware()
 function JobIdle()
 {
 	$job[ "jobname" ] = "idle";
-	$job[ "idle"    ] = array();
 	
 	return $job;
 }
