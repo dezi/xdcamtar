@@ -1,4 +1,6 @@
-#!/bin/sh -x
+#!/bin/sh
+
+set -x
 
 #
 # Copy size 10000 = 10 GB
@@ -10,7 +12,7 @@ COUNT=10000
 # Disk copy with progress...
 #
 
-dd if=/dev/mmcblk0 bs=1024k count=$COUNT | pv -s ${COUNT}m | sudo dd of=/dev/sda bs=1024k count=$COUNT iflag=fullblock
+dd if=/dev/mmcblk0 bs=1024k count=$COUNT | pv -s ${COUNT}m | dd of=/dev/sda bs=1024k count=$COUNT iflag=fullblock
 
 #
 # Fix corrupted copy partition
