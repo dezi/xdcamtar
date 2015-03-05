@@ -3,6 +3,7 @@
 $GLOBALS[ "encoder"  ] = "1.0.0.1001";
 
 $GLOBALS[ "servers"  ][] = "PC15930.spiegel.de:8880";
+$GLOBALS[ "servers"  ][] = "192.168.55.244:8880";
 $GLOBALS[ "servers"  ][] = "dezimac.local:80";
 
 $GLOBALS[ "uname"    ] = trim(`uname`);
