@@ -39,3 +39,10 @@ The following config needs to be added to apache/httpd.conf, where "/Users/dezi"
         AliasMatch ^/(update) "/Users/dezi/xdcamtar/server/php/$1.php"
     
     </IfModule>
+
+Enable shared memory and semphores in php on CentOS
+---------------------------------------------------
+
+sudo yum install php-process
+
+sudo /etc/init.d/httpd restart
