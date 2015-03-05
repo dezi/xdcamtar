@@ -252,7 +252,8 @@ function xdcam_uploads_get_status(&$status)
 
 						if (file_exists($tarball . ".tmp"))
 						{
-							$mystatus[ $index ][ "status" ] = "taring...";
+							$mystatus[ $index ][ "status"  ] = "taring...";
+							$mystatus[ $index ][ "tarsize" ] = filesize($tarball . ".tmp") / 1024;
 						}
 						
 						if (file_exists($tarball . ".bad"))

@@ -29,6 +29,14 @@ Kappa.StatusEvent = function(status)
 		inner += '<td>' + upload.path   +    '</td>';
 		inner += '<td>' + upload.kbsize + ' kb</td>';
 		inner += '<td>' + upload.status +    '</td>';
+		
+		if ((upload.status == "taring...") && (upload.tarsize > 0))
+		{
+			var percent = Math.round((upload.tarsize / upload.kbsize) * 100);
+			
+			inner += '<td>' + percent + ' %</td>';
+		}
+		
 		inner += '</tr>';
 	}
 	
@@ -111,7 +119,7 @@ Kappa.StatusCaller = function()
 		<thead>
 			<th>Kennung<hr/></th>
 			<th>Instance<hr/></th>
-			<th>Job<hr/></th>
+			<th>Status<hr/></th>
 			<th>Fertig<hr/></th>
 		</thead>
 		<tbody id="encoders">
