@@ -36,7 +36,7 @@ rmdir ./xxxsda2
 # Create working partition.
 #
 
-mkfs.ext4 /dev/sda3
+mkfs.ext4 -F /dev/sda3
 
 #
 # Create encoding tmp directory.
