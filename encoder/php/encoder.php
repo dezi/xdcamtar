@@ -1,6 +1,6 @@
 <?php
 
-$GLOBALS[ "encoder"  ] = "1.0.0.1009";
+$GLOBALS[ "encoder"  ] = "1.0.0.1010";
 
 $GLOBALS[ "servers"  ][] = "192.168.50.1:8880";
 $GLOBALS[ "servers"  ][] = "PC15930.spiegel.de:8880";
@@ -504,7 +504,7 @@ function MainLoop($selfname)
 	{
 		$binary = $_SERVER['_'];
 
-		if (trim($binary) == "") $binary = "/usr/bin/php";
+		if (! $binary) $binary = "/usr/bin/php";
 
 		Logdat("Binary: " . $binary . "\n");
 		Logdat("Option: " . implode(" ",$_SERVER[ "argv" ]) . "\n");
