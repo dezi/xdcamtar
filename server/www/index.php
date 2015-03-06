@@ -103,8 +103,8 @@ Kappa.StatusCaller = function()
 <h4><center id="stamp"></center></h4>
 <h3><center>XDCAM-Processing-Status</center></h3>
 
-<center style="margin:8px">
-	<table width="1000" border="0" cellpadding="8" style="background-color:#cccccc">
+<center style="margin:8px;font-size:14px">
+	<table width="1200" border="0" cellpadding="8" style="background-color:#cccccc">
 		<thead>
 			<th width="5%" >Doknr<hr/></th>
 			<th width="50%">Path<hr/></th>
@@ -117,8 +117,8 @@ Kappa.StatusCaller = function()
 	</table>
 </center>
 
-<center style="margin:8px">
-	<table width="1000" border="0" cellpadding="8" style="background-color:#cccccc;white-space:nowrap">
+<center style="margin:8px;font-size:14px">
+	<table width="1200" border="0" cellpadding="8" style="background-color:#cccccc;white-space:nowrap">
 		<thead>
 			<th width="40%">Kennung<hr/></th>
 			<th width="27%">Instance<hr/></th>
