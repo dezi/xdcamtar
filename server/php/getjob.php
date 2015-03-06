@@ -4,7 +4,7 @@
 // Version definitions.
 //
 
-$GLOBALS[ "encoder"  ] = "1.0.0.1005";
+$GLOBALS[ "encoder"  ] = "1.0.0.1006";
 $GLOBALS[ "vserver"  ] = "1.0.0.1000";
 
 //
