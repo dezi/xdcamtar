@@ -1,6 +1,6 @@
 <?php
 
-$GLOBALS[ "encoder"  ] = "1.0.0.1006";
+$GLOBALS[ "encoder"  ] = "1.0.0.1009";
 
 $GLOBALS[ "servers"  ][] = "192.168.50.1:8880";
 $GLOBALS[ "servers"  ][] = "PC15930.spiegel.de:8880";
@@ -502,12 +502,16 @@ function MainLoop($selfname)
 	
 	if ($GLOBALS[ "restart" ] && ! $GLOBALS[ "shutdown" ])
 	{
-		Logdat("Binary: " . $_SERVER['_'] . "\n");
+		$binary = $_SERVER['_'];
+
+		if (trim($binary) == "") $binary = "/usr/bin/php";
+
+		Logdat("Binary: " . $binary . "\n");
 		Logdat("Option: " . implode(" ",$_SERVER[ "argv" ]) . "\n");
 		Logdat("Restarting.\n");
 		Logdat("===========\n");
 		
-		pcntl_exec($_SERVER['_'],$_SERVER[ "argv" ]);
+		pcntl_exec($binary,$_SERVER[ "argv" ]);
 	}
 	else
 	{
