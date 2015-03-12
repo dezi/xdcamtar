@@ -24,23 +24,27 @@ Kappa.StatusEvent = function(status)
 	{
 		var upload = status.uploads[ uploadinx ];
 		
-		inner += '<tr>';
-		inner += '<td>' + upload.entry  +    '</td>';
-		inner += '<td>' + upload.path   +    '</td>';
-		inner += '<td style="text-align:right">' + upload.kbsize + ' kb</td>';
-		inner += '<td>' + upload.status +    '</td>';
+		var bgcolor = '#cccccc';
+		var trinn = '';
+	
+		trinn += '<td>' + upload.entry  +    '</td>';
+		trinn += '<td>' + upload.path   +    '</td>';
+		trinn += '<td style="text-align:right">' + upload.kbsize + ' kb</td>';
+		trinn += '<td>' + upload.status +    '</td>';
 		
 		if ((upload.status == "taring...") && (upload.percent > 0))
 		{
-			inner += '<td style="text-align:right">' + upload.percent + ' %</td>';
+			trinn += '<td style="text-align:right">' + upload.percent + ' %</td>';
+			bgcolor = "#ccffcc";
 		}
 		
 		if ((upload.status == "encoding...") && (upload.percent > 0))
 		{
-			inner += '<td style="text-align:right">' + upload.percent + ' %</td>';
+			trinn += '<td style="text-align:right">' + upload.percent + ' %</td>';
+			bgcolor = "#ccffcc";
 		}
 		
-		inner += '</tr>';
+		inner += '<tr style="background-color:' + bgcolor + '">' + trinn + '</tr>';
 	}
 	
 	uploadstbody.innerHTML = inner;
@@ -53,22 +57,23 @@ Kappa.StatusEvent = function(status)
 	{
 		var encoder = status.encoders[ encoderinx ];
 		
-		inner += '<tr>';
+		var bgcolor = '#cccccc';
+		var trinn = '';
 		
 		if ((encoder.jobname == "encode") && encoder.progress)
 		{
 			var tarname = encoder.progress.input.split('.tar')[ 0 ] + '.tar';
 			
-			inner += '<td>' + encoder.progress.docnum + '</td>';
-			inner += '<td>' + tarname + ' => ' + encoder.progress.clname + '</td>';
+			trinn += '<td>' + encoder.progress.docnum + '</td>';
+			trinn += '<td>' + tarname + ' => ' + encoder.progress.clname + '</td>';
 		}
 		else
 		{
-			inner += '<td></td>';
-			inner += '<td></td>';
+			trinn += '<td></td>';
+			trinn += '<td></td>';
 		}
 		
-		inner += '<td>'  
+		trinn += '<td>'  
 			   + encoder.encoder + " = " 
 			   + encoder.remoteip + " - " 
 			   + encoder.uname + "/" 
@@ -78,27 +83,29 @@ Kappa.StatusEvent = function(status)
 			   + ']'
 			   +  '</td>'
 			   ;
-		
+				
 		if (encoder.jobname == "encode")
 		{
 			if (encoder.progress)
 			{				
-				inner += '<td>encoding...</td>';
-				inner += '<td>' + encoder.progress.percent + '%</td>';
+				trinn += '<td>encoding...</td>';
+				trinn += '<td>' + encoder.progress.percent + '%</td>';
 			}
 			else
 			{
-				inner += '<td>encoding...</td>';
-				inner += '<td></td>';
+				trinn += '<td>encoding...</td>';
+				trinn += '<td></td>';
 			}
+			
+			bgcolor = "#ccffcc";
 		}
 		else
 		{
-			inner += '<td>' + encoder.jobname + '</td>';
-			inner += '<td></td>';
+			trinn += '<td>' + encoder.jobname + '</td>';
+			trinn += '<td></td>';
 		}
 		
-		inner += '</tr>';
+		inner += '<tr style="background-color:' + bgcolor + '">' + trinn + '</tr>';
 	}
 	
 	encoderstbody.innerHTML = inner;
