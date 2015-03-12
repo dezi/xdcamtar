@@ -1,12 +1,13 @@
 <?php
 
-$GLOBALS[ "encoder"  ] = "1.0.0.1012";
+$GLOBALS[ "encoder"  ] = "1.0.0.1014";
 
-$GLOBALS[ "servers"  ][] = "192.168.50.1:8880";
+$GLOBALS[ "servers"  ][] = "kappa-ux-qs.local:8880";
 $GLOBALS[ "servers"  ][] = "PC15930.spiegel.de:8880";
 $GLOBALS[ "servers"  ][] = "192.168.55.244:8880";
 $GLOBALS[ "servers"  ][] = "dezimac.local:80";
 
+$GLOBALS[ "cpu" 	 ] = trim(`uname -m`);
 $GLOBALS[ "uname"    ] = trim(`uname`);
 $GLOBALS[ "hostname" ] = trim(`hostname`);
 $GLOBALS[ "instance" ] = CreateGuid();
@@ -284,6 +285,7 @@ function JobUpdate($fp,$job)
 
 function Getjob()
 {
+	$cpu      = $GLOBALS[ "cpu"      ];
 	$uname    = $GLOBALS[ "uname"    ];
 	$encoder  = $GLOBALS[ "encoder"  ];
 	$hostname = $GLOBALS[ "hostname" ];
@@ -310,6 +312,8 @@ function Getjob()
 	{
 		Logdat("No server available.\n");
 		
+		sleep(3);
+		
 		return;
 	}
 	
@@ -317,6 +321,7 @@ function Getjob()
 		
 	fwrite($fp,"GET /getjob HTTP/1.1\r\n");
     fwrite($fp,"Host: $host\r\n");
+    fwrite($fp,"XDC-CPU: $cpu\r\n");
     fwrite($fp,"XDC-Uname: $uname\r\n");
     fwrite($fp,"XDC-Encoder: $encoder\r\n");
     fwrite($fp,"XDC-Hostname: $hostname\r\n");
@@ -404,6 +409,7 @@ function Putpro($job,$line)
 	// Open socket stream for transfer.
 	//
 	
+	$cpu      = $GLOBALS[ "cpu"      ];
 	$uname    = $GLOBALS[ "uname"    ];
 	$encoder  = $GLOBALS[ "encoder"  ];
 	$hostname = $GLOBALS[ "hostname" ];
@@ -423,6 +429,7 @@ function Putpro($job,$line)
 	
 	fwrite($fp,"GET /putpro HTTP/1.1\r\n");
     fwrite($fp,"Host: $host\r\n");
+    fwrite($fp,"XDC-CPU: $cpu\r\n");
     fwrite($fp,"XDC-Uname: $uname\r\n");
     fwrite($fp,"XDC-Encoder: $encoder\r\n");
     fwrite($fp,"XDC-Hostname: $hostname\r\n");
@@ -495,8 +502,6 @@ function MainLoop($selfname)
 		
 		Logflush();
 				
-		sleep(3);
-
 		Getjob();
 	}
 	

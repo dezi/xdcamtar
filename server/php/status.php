@@ -151,7 +151,6 @@ function xdcam_previews_get_status(&$status)
 	//
 	
 	$prv = "../tmp/xdcam/previews";
-	
 	$dir = "../tmp/xdcam/tarballs";
 	$dfd = opendir($dir);
 	
@@ -223,8 +222,6 @@ function xdcam_previews_get_status(&$status)
 			{
 				$name = $tarfile[ "name" ];
 				$size = $tarfile[ "size" ];
-				
-				$totalsize += round($size / 10);
 			
 				if (substr($name,-7) != "V01.MXF") continue;
 			
@@ -236,7 +233,9 @@ function xdcam_previews_get_status(&$status)
 				
 					continue;
 				}
-			
+				
+				$totalsize += round($size / 10);
+
 				$xmloutpath = dirname(getcwd()) . "/tmp/xdcam/previews/" . substr($name,0,-4) . ".xml";
 				
 				$video = array();
@@ -288,8 +287,6 @@ function xdcam_previews_get_status(&$status)
 		foreach ($status[ "uploads" ] as $index => $upload)
 		{
 			if ($upload[ "entry" ] != $tarname) continue;
-			
-			error_log("$tarname =>>>>>>>>>> $totaldone == $totalsize");
 			
 			if ($totaldone == $totalsize)
 			{
@@ -606,6 +603,8 @@ xdcam_expire_encoders    ($status);
 //
 // Write back updated status to shared memory.
 //
+
+$status[ "laststatus" ] = time();
 
 smem_putmem($status);
 

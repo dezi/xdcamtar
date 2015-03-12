@@ -4,7 +4,7 @@
 // Version definitions.
 //
 
-$GLOBALS[ "encoder"  ] = "1.0.0.1012";
+$GLOBALS[ "encoder"  ] = "1.0.0.1014";
 $GLOBALS[ "vserver"  ] = "1.0.0.1000";
 
 //
@@ -61,11 +61,12 @@ function ProcessRequest()
 	
 	$status = smem_getmem();
 
+	$job[ "cpu"       ] = $_SERVER[ "HTTP_XDC_CPU"      ];
 	$job[ "uname"     ] = $_SERVER[ "HTTP_XDC_UNAME"    ];
 	$job[ "encoder"   ] = $_SERVER[ "HTTP_XDC_ENCODER"  ];
 	$job[ "hostname"  ] = $_SERVER[ "HTTP_XDC_HOSTNAME" ];
 	$job[ "instance"  ] = $_SERVER[ "HTTP_XDC_INSTANCE" ];
-	$job[ "remoteip"  ] = $_SERVER[ "REMOTE_ADDR" 	   ];
+	$job[ "remoteip"  ] = $_SERVER[ "REMOTE_ADDR" 	    ];
 	$job[ "timestamp" ] = time();
  
 	$status[ "encoders" ][ $job[ "instance" ] ] = $job;
@@ -127,6 +128,27 @@ function ProcessRequest()
 	
 	smem_putmem($status);
 
+	//
+	// Check if a status call is required.
+	//
+	
+	if ((! isset($status[ "laststatus" ])) || 
+		((time() - $status[ "laststatus" ]) > 20))
+	{
+		error_log("Requesting status...");
+		
+		$statusurl = "http://"
+				   . $_SERVER[ "SERVER_ADDR" ]
+				   . ":"
+				   . $_SERVER[ "SERVER_PORT" ]
+				   . "/status"
+				   ;
+				   
+		file_get_contents($statusurl);
+		
+		error_log("Requesting status done.");
+	}
+	
 	error_log("Done $pd");
 }
 
@@ -222,7 +244,22 @@ function JobXDCAMEncode()
 		}
 	}
 	
-	asort($candidates);
+	if ($_SERVER[ "HTTP_XDC_CPU" ] == "armv7l")
+	{
+		//
+		// Slow CPU gets shortest first.
+		//
+		
+		asort($candidates);
+	}
+	else
+	{
+		//
+		// Fast CPU gets longest first.
+		//
+		
+		arsort($candidates);
+	}
 	
 	foreach ($candidates as $name => $size)
 	{

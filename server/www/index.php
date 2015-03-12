@@ -27,17 +27,17 @@ Kappa.StatusEvent = function(status)
 		inner += '<tr>';
 		inner += '<td>' + upload.entry  +    '</td>';
 		inner += '<td>' + upload.path   +    '</td>';
-		inner += '<td>' + upload.kbsize + ' kb</td>';
+		inner += '<td style="text-align:right">' + upload.kbsize + ' kb</td>';
 		inner += '<td>' + upload.status +    '</td>';
 		
 		if ((upload.status == "taring...") && (upload.percent > 0))
 		{
-			inner += '<td>' + upload.percent + ' %</td>';
+			inner += '<td style="text-align:right">' + upload.percent + ' %</td>';
 		}
 		
 		if ((upload.status == "encoding...") && (upload.percent > 0))
 		{
-			inner += '<td>' + upload.percent + ' %</td>';
+			inner += '<td style="text-align:right">' + upload.percent + ' %</td>';
 		}
 		
 		inner += '</tr>';
@@ -54,24 +54,48 @@ Kappa.StatusEvent = function(status)
 		var encoder = status.encoders[ encoderinx ];
 		
 		inner += '<tr>';
-		inner += '<td>'  + encoder.encoder + " = " + encoder.remoteip + " - " + encoder.uname + " @ " + encoder.hostname +  '</td>';
-		inner += '<td>' + encoder.instance  +    '</td>';
+		
+		if ((encoder.jobname == "encode") && encoder.progress)
+		{
+			var tarname = encoder.progress.input.split('.tar')[ 0 ] + '.tar';
+			
+			inner += '<td>' + encoder.progress.docnum + '</td>';
+			inner += '<td>' + tarname + ' => ' + encoder.progress.clname + '</td>';
+		}
+		else
+		{
+			inner += '<td></td>';
+			inner += '<td></td>';
+		}
+		
+		inner += '<td>'  
+			   + encoder.encoder + " = " 
+			   + encoder.remoteip + " - " 
+			   + encoder.uname + "/" 
+			   + encoder.cpu + " @ " 
+			   + encoder.hostname + " ["
+			   + encoder.instance.substring(0,8)
+			   + ']'
+			   +  '</td>'
+			   ;
 		
 		if (encoder.jobname == "encode")
 		{
 			if (encoder.progress)
 			{				
-				inner += '<td>' + "encoding => " + encoder.progress.docnum + "/" + encoder.progress.clname + '</td>';
+				inner += '<td>encoding...</td>';
 				inner += '<td>' + encoder.progress.percent + '%</td>';
 			}
 			else
 			{
-				inner += '<td>' + "encoding" + '</td>';
+				inner += '<td>encoding...</td>';
+				inner += '<td></td>';
 			}
 		}
 		else
 		{
 			inner += '<td>' + encoder.jobname + '</td>';
+			inner += '<td></td>';
 		}
 		
 		inner += '</tr>';
@@ -99,17 +123,21 @@ Kappa.StatusCaller = function()
 
 </script>
 </head>
-<body>
-<h4><center id="stamp"></center></h4>
+<body style="background-color:#0e2034;color:#ffffff">
+<div><center><img src="spiegel-tv.png"/></center></div>
 <h3><center>XDCAM-Processing-Status</center></h3>
+<h4><center id="stamp"></center></h4>
 
-<center style="margin:8px;font-size:14px">
-	<table width="1200" border="0" cellpadding="8" style="background-color:#cccccc">
+<center style="margin:8px;font-size:14px;color:black"">
+	<div style="width:1000px;padding-top:8px;border-bottom:1px solid black;font-size:24px;background-color:#cccccc">
+		Disk Status
+	</div>
+	<table width="1000" border="0" cellpadding="8" style="background-color:#cccccc">
 		<thead>
 			<th width="5%" >Doknr<hr/></th>
-			<th width="50%">Path<hr/></th>
-			<th width="12%">Größe<hr/></th>
-			<th width="25%">Status<hr/></th>
+			<th width="62%">Pfad<hr/></th>
+			<th width="15%">Größe<hr/></th>
+			<th width="10%">Status<hr/></th>
 			<th width="5%" >Fertig<hr/></th>
 		</thead>
 		<tbody id="uploads">
@@ -117,12 +145,16 @@ Kappa.StatusCaller = function()
 	</table>
 </center>
 
-<center style="margin:8px;font-size:14px">
-	<table width="1200" border="0" cellpadding="8" style="background-color:#cccccc;white-space:nowrap">
+<center style="margin:8px;font-size:14px;color:black">
+	<div style="width:1000px;padding-top:8px;border-bottom:1px solid black;font-size:24px;background-color:#cccccc">
+		Encoder Status
+	</div>
+	<table width="1000" border="0" cellpadding="8" style="background-color:#cccccc;white-space:nowrap">
 		<thead>
+			<th width="5%" >Doknr<hr/></th>
+			<th width="35%">Pfad<hr/></th>
 			<th width="40%">Kennung<hr/></th>
-			<th width="27%">Instance<hr/></th>
-			<th width="25%">Status<hr/></th>
+			<th width="10%">Status<hr/></th>
 			<th width="5%" >Fertig<hr/></th>
 		</thead>
 		<tbody id="encoders">
