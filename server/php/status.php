@@ -31,7 +31,14 @@ function xdcam_uploads_get_status_complete(&$status,$index)
 	$indexxml = file_get_contents($indexxmlpath);
 	
 	$indexobj = json_decdat(json_encdat(simplexml_load_string($indexxml)));
-
+	
+	if (isset($indexobj[ "clipTable" ][ "clip" ][ "@attributes" ]))
+	{
+		$clip = $indexobj[ "clipTable" ][ "clip" ];
+		$indexobj[ "clipTable" ][ "clip" ] = array();
+		$indexobj[ "clipTable" ][ "clip" ][] = $clip;
+	}
+	
 	//
 	// Get clip content path.
 	//
@@ -58,10 +65,10 @@ function xdcam_uploads_get_status_complete(&$status,$index)
 		// Check for video file.
 		//
 		
-		$subclipfile = $subclippath . "/" . $clip[ "video" ][ "@attributes" ][ "file" ];
+		$subclipfile = $subclippath . "/" . $clip[ "video" ][ "@attributes" ][ "file" ];		
 
 		if (! file_exists($subclipfile)) return false;
-	
+
 		$clipfiles[] = $subclipfile;
 
 		//
@@ -73,7 +80,7 @@ function xdcam_uploads_get_status_complete(&$status,$index)
 			$subclipfile = $subclippath . "/" . $audio[ "@attributes" ][ "file" ];
 
 			if (! file_exists($subclipfile)) return false;
-		
+	
 			$clipfiles[] = $subclipfile;
 		}
 	}
