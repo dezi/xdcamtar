@@ -1,6 +1,6 @@
 <?php
 
-$GLOBALS[ "encoder"  ] = "1.0.0.1014";
+$GLOBALS[ "encoder"  ] = "1.0.0.1015";
 
 $GLOBALS[ "servers"  ][] = "kappa-ux-qs.local:8880";
 $GLOBALS[ "servers"  ][] = "PC15930.spiegel.de:8880";

@@ -142,7 +142,7 @@ function get_tar_content($tarpath,$tarcont = null)
 					{
 						$contlen = ord($payber[ 0 ]) & 0x7f;
 					}
-	
+
 					if (bin2hex($oidval) == "2b34010201010d01030116010400")
 					{
 						//
@@ -150,19 +150,27 @@ function get_tar_content($tarpath,$tarcont = null)
 						//
 						
 						$elen = $contlen;
+						$done = 0;
 						
+						error_log("tarman: Spooling audio essence size=$elen");
+
 						while ($elen > 0)
 						{
 							$xfer = $elen;
 				
-							if ($xfer > 32 * 1024) $xfer = 32 * 1024;
+							if ($xfer > (64 * 1024)) $xfer = 64 * 1024;
 				
 							$content = fread($tarfd,$xfer);
 		
 							echo $content;
-				
+							
 							$elen -= strlen($content);
+							$done += strlen($content);
+							
+							//error_log("tarman: Spooling audio essence done=$done rest=$elen");
 						}
+						
+						error_log("tarman: Spooling audio essence done.");
 					}
 					else
 					{
@@ -179,6 +187,9 @@ function get_tar_content($tarpath,$tarcont = null)
 				//
 				
 				$todo = $size;
+				$done = 0;
+				
+				error_log("tarman: Spooling mxf-file size=$todo");
 			
 				while ($todo > 0)
 				{
@@ -191,7 +202,12 @@ function get_tar_content($tarpath,$tarcont = null)
 					echo $content;
 				
 					$todo -= strlen($content);
+					$done += strlen($content);
+					
+					//error_log("tarman: Spooling mxf-file done=$done rest=$todo");
 				}
+				
+				error_log("tarman: Spooling mxf-file done.");
 			}
 			
 			error_log("tarman: $file => done");

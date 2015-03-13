@@ -1,7 +1,9 @@
 <?php
 
+$file = "../tmp/xdcam/original/magazin/XDCAM/PROAV/CLPR/C0002/C0002A01.MXF";
+$file = "../tmp/xdcam/testfiles/11111/XDCAM/PROAV/CLPR/C0002/C0002A01.MXF";
 
-$fd = fopen("../tmp/xdcam/original/magazin/XDCAM/PROAV/CLPR/C0002/C0002A01.MXF","rb");
+$fd = fopen($file,"rb");
 
 while (! feof($fd))
 {
@@ -39,7 +41,7 @@ while (! feof($fd))
 	
 	echo bin2hex($oidval) . " => " . $contlen . "\n";
 	
-	fread($fd,$contlen);
+	fseek($fd,$contlen,SEEK_CUR);
 }
 
 ?>

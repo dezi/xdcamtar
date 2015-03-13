@@ -13,7 +13,6 @@ $tartpos = strpos($tarball,".tar/");
 
 if ($tartpos === false)
 {
-
 	$directory = get_tar_content($tarball);
 	
 	//
